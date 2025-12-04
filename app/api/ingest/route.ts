@@ -149,24 +149,29 @@ export async function POST(request: NextRequest) {
             console.error('Failed to update active visitor:', activeVisitorError);
         }
 
+        const origin = request.headers.get('origin') || '*';
+
         return NextResponse.json({ success: true }, {
             status: 200,
             headers: {
-                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Origin': origin,
                 'Access-Control-Allow-Methods': 'POST, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Credentials': 'true',
             }
         });
     } catch (error) {
         console.error('Ingestion error:', error);
+        const origin = request.headers.get('origin') || '*';
 
         if (error instanceof z.ZodError) {
             return NextResponse.json({ error: 'Invalid request data', details: (error as any).errors }, {
                 status: 400,
                 headers: {
-                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Origin': origin,
                     'Access-Control-Allow-Methods': 'POST, OPTIONS',
                     'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Credentials': 'true',
                 }
             });
         }
@@ -174,21 +179,25 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Internal server error' }, {
             status: 500,
             headers: {
-                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Origin': origin,
                 'Access-Control-Allow-Methods': 'POST, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Credentials': 'true',
             }
         });
     }
 }
 
 export async function OPTIONS(request: NextRequest) {
+    const origin = request.headers.get('origin') || '*';
+
     return NextResponse.json({}, {
         status: 200,
         headers: {
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': origin,
             'Access-Control-Allow-Methods': 'POST, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Credentials': 'true',
         }
     });
 }
