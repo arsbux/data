@@ -17,12 +17,49 @@ const CreateSiteSchema = z.object({
     name: z.string().optional(),
 });
 
+export async function GET(request: NextRequest) {
+    try {
+        const supabase = await createClient();
+
+        // Get authenticated user
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Fetch sites for this user
+        const { data: sites, error } = await supabase
+            .from('sites')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching sites:', error);
+            return NextResponse.json({ error: 'Failed to fetch sites' }, { status: 500 });
+        }
+
+        return NextResponse.json(sites || []);
+    } catch (error) {
+        console.error('Sites API error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}
+
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const validated = CreateSiteSchema.parse(body);
 
         const supabase = await createClient();
+
+        // Get authenticated user
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
         // Generate a clean site ID from domain
         const siteId = validated.domain.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase() + '-' + Math.random().toString(36).substring(2, 7);
@@ -34,7 +71,7 @@ export async function POST(request: NextRequest) {
                 domain: validated.domain,
                 name: name,
                 site_id: siteId,
-                // user_id is nullable, leaving it null for now as auth is disabled
+                user_id: user.id, // Set the user_id!
             })
             .select()
             .single();
