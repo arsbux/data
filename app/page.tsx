@@ -89,12 +89,23 @@ export default function LandingPage() {
       <style jsx global>{`
         @media (max-width: 768px) {
           .landing-nav-links { display: none !important; }
-          .landing-feature-grid { grid-template-columns: 1fr !important; }
-          .landing-two-col { grid-template-columns: 1fr !important; text-align: center; }
+          .landing-feature-grid { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+          .landing-two-col { grid-template-columns: 1fr !important; text-align: center !important; gap: 2rem !important; }
           .landing-section { padding: 3rem 1rem !important; }
-          .landing-globe { height: 300px !important; }
-          .landing-stats { gap: 1rem !important; }
+          .landing-globe { height: 280px !important; }
+          .landing-stats { gap: 1rem !important; flex-wrap: wrap !important; }
           .landing-heading { font-size: 1.75rem !important; }
+          .landing-metrics { grid-template-columns: repeat(2, 1fr) !important; gap: 1rem !important; }
+          .landing-chart { height: 180px !important; }
+          .landing-pricing { grid-template-columns: 1fr !important; }
+          .landing-hero-buttons { flex-direction: column !important; width: 100% !important; }
+          .landing-hero-buttons a { width: 100% !important; text-align: center !important; }
+          .landing-nav-cta { padding: 0.4rem 0.75rem !important; font-size: 0.75rem !important; }
+          .landing-footer-links { flex-direction: column !important; gap: 1rem !important; }
+        }
+        @media (max-width: 480px) {
+          .landing-metrics { grid-template-columns: 1fr 1fr !important; }
+          .landing-hero-badge { font-size: 0.75rem !important; padding: 0.2rem 0.5rem !important; }
         }
       `}</style>
       <div style={{ minHeight: '100vh', backgroundColor: '#000', color: '#fff', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -121,7 +132,7 @@ export default function LandingPage() {
               <img src="/logo.png" alt="Fast Data" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
               <span style={{ fontWeight: 700, fontSize: '1.25rem', letterSpacing: '-0.02em' }}>Fast Data</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <div className="landing-nav-links" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
               <Link href="#features" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#9ca3af', textDecoration: 'none' }}>
                 Features
               </Link>
@@ -133,6 +144,7 @@ export default function LandingPage() {
               </Link>
               <Link
                 href="/signup"
+                className="landing-nav-cta"
                 style={{
                   fontSize: '0.875rem',
                   fontWeight: 500,
@@ -197,7 +209,7 @@ export default function LandingPage() {
               Fast Data provides privacy-friendly, real-time analytics for your website.
               No cookies, no bloat, just the insights you need to grow.
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+            <div className="landing-hero-buttons" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
               <Link
                 href="/signup"
                 style={{
@@ -243,7 +255,7 @@ export default function LandingPage() {
               boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
             }}>
               {/* Metrics Row */}
-              <div style={{
+              <div className="landing-metrics" style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
                 gap: '1.5rem',
@@ -259,7 +271,7 @@ export default function LandingPage() {
               </div>
 
               {/* Chart */}
-              <div style={{ height: '250px', width: '100%' }}>
+              <div className="landing-chart" style={{ height: '250px', width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={mockChartData} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
                     <defs>
@@ -295,7 +307,7 @@ export default function LandingPage() {
                 Powerful insights without the complexity. See exactly what's working and what needs attention.
               </p>
             </div>
-            <div style={{
+            <div className="landing-feature-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
               gap: '2rem'
@@ -334,7 +346,7 @@ export default function LandingPage() {
                 Watch as visitors from around the world explore your site. Get instant insights into who's online right now.
               </p>
             </div>
-            <div style={{
+            <div className="landing-globe" style={{
               height: '450px',
               borderRadius: '16px',
               overflow: 'hidden',
@@ -368,7 +380,7 @@ export default function LandingPage() {
         {/* Referrers Feature */}
         <section style={{ padding: '6rem 1rem' }}>
           <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
+            <div className="landing-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
               <div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#f97316', fontSize: '0.875rem', fontWeight: 600, marginBottom: '1rem' }}>
                   <LinkIcon size={18} />
@@ -389,7 +401,7 @@ export default function LandingPage() {
         {/* Geography Feature */}
         <section style={{ padding: '6rem 1rem', backgroundColor: 'rgba(255,255,255,0.02)' }}>
           <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
+            <div className="landing-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
               <DemoDataCard title="Top Countries" data={mockCountries} showFlags />
               <div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#22c55e', fontSize: '0.875rem', fontWeight: 600, marginBottom: '1rem' }}>
@@ -410,7 +422,7 @@ export default function LandingPage() {
         {/* Pages Feature */}
         <section style={{ padding: '6rem 1rem' }}>
           <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
+            <div className="landing-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
               <div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#a855f7', fontSize: '0.875rem', fontWeight: 600, marginBottom: '1rem' }}>
                   <FileText size={18} />
@@ -431,7 +443,7 @@ export default function LandingPage() {
         {/* Browsers Feature */}
         <section style={{ padding: '6rem 1rem', backgroundColor: 'rgba(255,255,255,0.02)' }}>
           <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
+            <div className="landing-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
               <DemoDataCard title="Browsers" data={mockBrowsers} />
               <div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#3b82f6', fontSize: '0.875rem', fontWeight: 600, marginBottom: '1rem' }}>
@@ -455,7 +467,7 @@ export default function LandingPage() {
             <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 700, marginBottom: '1rem' }}>Simple, transparent pricing</h2>
             <p style={{ color: '#9ca3af', marginBottom: '4rem', fontSize: '1.125rem' }}>Choose the plan that fits your needs. No hidden fees.</p>
 
-            <div style={{
+            <div className="landing-pricing" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
               gap: '2rem',
@@ -603,7 +615,7 @@ export default function LandingPage() {
               <img src="/logo.png" alt="Fast Data" style={{ width: '24px', height: '24px', borderRadius: '4px', opacity: 0.5, filter: 'grayscale(1)' }} />
               <span style={{ fontWeight: 600 }}>Fast Data</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '2rem' }}>
+            <div className="landing-footer-links" style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '2rem' }}>
               <Link href="/terms" style={{ color: '#6b7280', textDecoration: 'none' }}>Terms</Link>
               <Link href="/privacy" style={{ color: '#6b7280', textDecoration: 'none' }}>Privacy</Link>
               <a href="mailto:support@fastdata.com" style={{ color: '#6b7280', textDecoration: 'none' }}>Contact</a>
