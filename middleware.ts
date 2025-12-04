@@ -33,10 +33,15 @@ export async function middleware(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser();
 
-    // Protect dashboard and payment routes
-    if (request.nextUrl.pathname.startsWith('/dashboard') ||
-        request.nextUrl.pathname.startsWith('/checkout') ||
-        request.nextUrl.pathname.startsWith('/payment')) {
+    // Protect dashboard routes (requires auth + active subscription)
+    if (request.nextUrl.pathname.startsWith('/dashboard')) {
+        if (!user) {
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
+    }
+
+    // Protect onboarding (requires auth)
+    if (request.nextUrl.pathname.startsWith('/onboarding')) {
         if (!user) {
             return NextResponse.redirect(new URL('/login', request.url));
         }

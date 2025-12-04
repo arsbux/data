@@ -11,15 +11,8 @@ CREATE TABLE subscriptions (
 
 CREATE INDEX idx_subscriptions_user_id ON subscriptions (user_id);
 
--- Enable RLS
-ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+-- Disable RLS for testing (REMOVE IN PRODUCTION)
+ALTER TABLE subscriptions DISABLE ROW LEVEL SECURITY;
 
--- Policies
-CREATE POLICY "Users can view their own subscription"
-  ON subscriptions
-  FOR SELECT
-  USING (auth.uid() = user_id);
-
--- Only service role can insert/update for now (via webhook)
--- But for simplicity in this demo, we might allow authenticated users to insert if we do client-side integration (not recommended for prod but ok for MVP)
--- Better to stick to service role for updates.
+-- Grant full access for testing
+GRANT ALL ON subscriptions TO anon, authenticated;

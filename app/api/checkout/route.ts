@@ -1,42 +1,56 @@
-import { createClient } from '@/lib/supabase/server';
 import { dodo } from '@/lib/dodo';
 import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+// This endpoint creates a Dodo Payments checkout session and redirects to their hosted page
+// No auth required - user pays first, then creates account after payment success
+export async function GET(req: Request) {
+    const { searchParams } = new URL(req.url);
+    const plan = searchParams.get('plan') || 'lifetime';
 
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-    const { plan } = await req.json();
-
-    // Dodo Payments usually expects amount in smallest currency unit (cents)
-    const amount = plan === 'monthly' ? 900 : 3900;
-    const productName = plan === 'monthly' ? 'Fast Data Monthly' : 'Fast Data Lifetime';
+    // You need to create these products in your Dodo Payments Dashboard
+    // and replace these IDs with your actual product IDs
+    const productIds: Record<string, string> = {
+        monthly: process.env.DODO_MONTHLY_PRODUCT_ID || 'prod_monthly_placeholder',
+        lifetime: process.env.DODO_LIFETIME_PRODUCT_ID || 'prod_lifetime_placeholder',
+    };
 
     try {
-        const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-
-        const payment: any = await dodo.payments.create({
-            amount,
-            currency: 'USD',
-            product_name: productName,
-            customer: {
-                email: user.email || '',
-                name: user.user_metadata.full_name || '',
+        // Create a checkout session using Dodo Payments SDK
+        const session: any = await dodo.payments.create({
+            billing: {
+                city: '',
+                country: 'US',
+                state: '',
+                street: '',
+                zipcode: '',
             },
-            return_url: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
+            customer: {
+                email: '', // Dodo will collect this on their hosted checkout
+                name: '',
+            },
+            product_cart: [
+                {
+                    product_id: productIds[plan],
+                    quantity: 1,
+                }
+            ],
+            return_url: `${origin}/payment/success?plan=${plan}`,
             metadata: {
-                user_id: user.id,
-                plan_type: plan
+                plan_type: plan,
             }
         } as any);
 
-        return NextResponse.json({ url: payment.checkout_url });
+        // Redirect to Dodo's hosted checkout page
+        if (session.payment_link) {
+            return NextResponse.redirect(session.payment_link);
+        }
+
+        // Fallback if payment_link not returned
+        return NextResponse.json({ error: 'Could not create checkout session' }, { status: 500 });
     } catch (error: any) {
-        console.error('Payment creation error:', error);
-        return NextResponse.json({ error: error.message || 'Payment creation failed' }, { status: 500 });
+        console.error('Checkout error:', error);
+        return NextResponse.json({ error: error.message || 'Checkout failed' }, { status: 500 });
     }
 }
