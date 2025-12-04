@@ -4,8 +4,8 @@ import React, { useMemo } from 'react';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { scaleLinear } from 'd3-scale';
 
-// TopoJSON with country names and codes
-const GEO_URL = "https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries.json";
+// GeoJSON from react-globe.gl examples (Natural Earth data) - known to work and have properties
+const GEO_URL = "https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson";
 
 interface LocationMapProps {
     data: { name: string; value: number; code?: string }[];
@@ -43,8 +43,9 @@ export default function LocationMap({ data }: LocationMapProps) {
                     {({ geographies }) =>
                         geographies.map((geo) => {
                             // Try to match by name or code
-                            const name = geo.properties.name;
-                            const code = geo.properties['Alpha-2'] || geo.properties['ISO_A2'];
+                            // Natural Earth properties: NAME, ISO_A2, ADM0_A3
+                            const name = geo.properties.NAME || geo.properties.name;
+                            const code = geo.properties.ISO_A2 || geo.properties.iso_a2;
 
                             let value = dataMap.get(name);
                             if (!value && code) {
