@@ -32,7 +32,13 @@ export async function GET(req: Request) {
 
     try {
         // Use fetch directly to call Dodo Payments API
-        const response = await fetch('https://api.dodopayments.com/payments', {
+        // Test mode: https://test.dodopayments.com
+        // Live mode: https://live.dodopayments.com
+        const baseUrl = process.env.NODE_ENV === 'production'
+            ? 'https://live.dodopayments.com'
+            : 'https://test.dodopayments.com';
+
+        const response = await fetch(`${baseUrl}/payments`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
