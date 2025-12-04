@@ -1,14 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from '../page.module.css';
+import { Check, Copy, ArrowRight } from 'lucide-react';
 
 export default function AddSitePage() {
+    const router = useRouter();
     const [domain, setDomain] = useState('');
     const [name, setName] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<{ site: any; trackingCode: string } | null>(null);
     const [error, setError] = useState('');
+    const [copied, setCopied] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,6 +38,14 @@ export default function AddSitePage() {
             setError(err.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleCopy = () => {
+        if (result) {
+            navigator.clipboard.writeText(result.trackingCode);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
         }
     };
 
@@ -115,52 +127,131 @@ export default function AddSitePage() {
                     </form>
                 ) : (
                     <div>
+                        {/* Success Header */}
                         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
-                            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Site Added Successfully!</h2>
+                            <div style={{
+                                width: '64px',
+                                height: '64px',
+                                borderRadius: '50%',
+                                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                margin: '0 auto 1rem'
+                            }}>
+                                <Check size={32} color="white" strokeWidth={3} />
+                            </div>
+                            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+                                Site Added Successfully!
+                            </h2>
                             <p style={{ color: 'var(--text-secondary)' }}>
-                                You're ready to track <strong>{result.site.domain}</strong>
+                                You're ready to track <strong style={{ color: '#60a5fa' }}>{result.site.domain}</strong>
                             </p>
                         </div>
 
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-                                Your Tracking Code
-                            </h3>
-                            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                                Copy and paste this code into the <code>&lt;head&gt;</code> of your website.
+                        {/* Tracking Code Section */}
+                        <div style={{
+                            background: 'rgba(0,0,0,0.4)',
+                            borderRadius: '12px',
+                            padding: '1.5rem',
+                            marginBottom: '1.5rem',
+                            border: '1px solid var(--border-primary)'
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                <h3 style={{ fontSize: '1rem', color: 'var(--text-primary)', margin: 0 }}>
+                                    📋 Your Tracking Code
+                                </h3>
+                                <button
+                                    onClick={handleCopy}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        padding: '0.5rem 1rem',
+                                        background: copied ? '#22c55e' : 'var(--accent-primary)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        fontSize: '0.875rem',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                                    {copied ? 'Copied!' : 'Copy Code'}
+                                </button>
+                            </div>
+
+                            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                                Add this code to the <code style={{ background: 'rgba(255,255,255,0.1)', padding: '0.125rem 0.5rem', borderRadius: '4px' }}>&lt;head&gt;</code> section of your website:
                             </p>
+
                             <div style={{
-                                background: 'rgba(0,0,0,0.3)',
+                                background: '#0d1117',
                                 padding: '1rem',
                                 borderRadius: '8px',
-                                fontFamily: 'monospace',
-                                fontSize: '0.875rem',
-                                wordBreak: 'break-all',
-                                border: '1px solid var(--border-primary)',
-                                position: 'relative'
+                                fontFamily: 'ui-monospace, Menlo, Monaco, "Cascadia Mono", monospace',
+                                fontSize: '0.8rem',
+                                lineHeight: 1.6,
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                overflow: 'auto'
                             }}>
-                                {result.trackingCode}
+                                <div style={{ color: '#7ee787' }}>&lt;!-- Fast Data Analytics --&gt;</div>
+                                <div>
+                                    <span style={{ color: '#ff7b72' }}>&lt;script</span>
+                                    <span style={{ color: '#79c0ff' }}> defer</span>
+                                </div>
+                                <div style={{ paddingLeft: '1rem' }}>
+                                    <span style={{ color: '#79c0ff' }}>src</span>
+                                    <span style={{ color: '#c9d1d9' }}>=</span>
+                                    <span style={{ color: '#a5d6ff' }}>"https://data.flightlabs.agency/trackify.js"</span>
+                                </div>
+                                <div style={{ paddingLeft: '1rem' }}>
+                                    <span style={{ color: '#79c0ff' }}>data-site-id</span>
+                                    <span style={{ color: '#c9d1d9' }}>=</span>
+                                    <span style={{ color: '#a5d6ff' }}>"{result.site.site_id}"</span>
+                                </div>
+                                <div>
+                                    <span style={{ color: '#ff7b72' }}>&gt;&lt;/script&gt;</span>
+                                </div>
                             </div>
                         </div>
 
+                        {/* Instructions */}
+                        <div style={{
+                            background: 'rgba(59, 130, 246, 0.1)',
+                            borderRadius: '8px',
+                            padding: '1rem',
+                            marginBottom: '1.5rem',
+                            border: '1px solid rgba(59, 130, 246, 0.3)'
+                        }}>
+                            <p style={{ fontSize: '0.875rem', color: '#93c5fd', margin: 0 }}>
+                                <strong>💡 Tip:</strong> After adding the code, visit your website and you'll start seeing analytics data in real-time!
+                            </p>
+                        </div>
+
+                        {/* Action Button */}
                         <button
-                            onClick={() => {
-                                setResult(null);
-                                setDomain('');
-                                setName('');
-                            }}
+                            onClick={() => router.push('/dashboard')}
                             style={{
                                 width: '100%',
-                                padding: '0.75rem',
-                                background: 'transparent',
-                                border: '1px solid var(--border-primary)',
-                                color: 'var(--text-primary)',
-                                borderRadius: '6px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem',
+                                padding: '0.875rem',
+                                background: 'var(--accent-primary)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontSize: '1rem',
+                                fontWeight: 600,
                                 cursor: 'pointer'
                             }}
                         >
-                            Add Another Site
+                            View Analytics Dashboard
+                            <ArrowRight size={18} />
                         </button>
                     </div>
                 )}
