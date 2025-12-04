@@ -9,48 +9,55 @@ export async function GET(req: Request) {
 
     const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
+    // Check if API key is configured
+    if (!process.env.DODO_PAYMENTS_API_KEY) {
+        console.error('DODO_PAYMENTS_API_KEY is not set');
+        return NextResponse.json({
+            error: 'Payment system not configured. Please set DODO_PAYMENTS_API_KEY in environment variables.'
+        }, { status: 500 });
+    }
+
     // You need to create these products in your Dodo Payments Dashboard
     // and replace these IDs with your actual product IDs
     const productIds: Record<string, string> = {
-        monthly: process.env.DODO_MONTHLY_PRODUCT_ID || 'prod_monthly_placeholder',
-        lifetime: process.env.DODO_LIFETIME_PRODUCT_ID || 'prod_lifetime_placeholder',
+        monthly: process.env.DODO_MONTHLY_PRODUCT_ID || '',
+        lifetime: process.env.DODO_LIFETIME_PRODUCT_ID || '',
     };
 
+    if (!productIds[plan]) {
+        console.error(`Product ID not configured for plan: ${plan}`);
+        return NextResponse.json({
+            error: `Product ID not configured for ${plan} plan. Please set DODO_${plan.toUpperCase()}_PRODUCT_ID in environment variables.`
+        }, { status: 500 });
+    }
+
     try {
-        // Create a checkout session using Dodo Payments SDK
-        const session: any = await dodo.payments.create({
-            billing: {
-                city: '',
-                country: 'US',
-                state: '',
-                street: '',
-                zipcode: '',
-            },
-            customer: {
-                email: '', // Dodo will collect this on their hosted checkout
-                name: '',
-            },
-            product_cart: [
-                {
-                    product_id: productIds[plan],
-                    quantity: 1,
-                }
-            ],
-            return_url: `${origin}/payment/success?plan=${plan}`,
-            metadata: {
-                plan_type: plan,
-            }
-        } as any);
+        // Create a payment link using Dodo Payments SDK
+        const paymentLink: any = await dodo.paymentLinks.create({
+            product_id: productIds[plan],
+            redirect_url: `${origin}/payment/success?plan=${plan}`,
+        });
 
         // Redirect to Dodo's hosted checkout page
-        if (session.payment_link) {
-            return NextResponse.redirect(session.payment_link);
+        if (paymentLink.url) {
+            return NextResponse.redirect(paymentLink.url);
         }
 
-        // Fallback if payment_link not returned
-        return NextResponse.json({ error: 'Could not create checkout session' }, { status: 500 });
+        // Fallback - return the payment link data
+        return NextResponse.json(paymentLink);
     } catch (error: any) {
         console.error('Checkout error:', error);
-        return NextResponse.json({ error: error.message || 'Checkout failed' }, { status: 500 });
+
+        // Parse error message
+        let errorMessage = 'Checkout failed';
+        if (error.message) {
+            errorMessage = error.message;
+        } else if (error.status === 401) {
+            errorMessage = 'Invalid API key. Please check DODO_PAYMENTS_API_KEY.';
+        } else if (error.status === 404) {
+            errorMessage = 'Product not found. Please check your product IDs.';
+        }
+
+        return NextResponse.json({ error: errorMessage }, { status: error.status || 500 });
     }
 }
