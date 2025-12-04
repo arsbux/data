@@ -59,7 +59,7 @@ const getCentroid = (feature: any) => {
 };
 
 export default function GlobeVisualization({ visitors = [], autoRotate = true }: GlobeVisualizationProps) {
-    const globeEl = useRef<any>();
+    const globeEl = useRef<any>(null);
     const [countries, setCountries] = useState({ features: [] });
     const [mounted, setMounted] = useState(false);
 

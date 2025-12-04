@@ -9,11 +9,30 @@ import {
 } from 'lucide-react';
 import styles from './dashboard.module.css';
 
-export default function DashboardLayout({
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+
+export default async function DashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        redirect('/login');
+    }
+
+    const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('status')
+        .eq('user_id', user.id)
+        .single();
+
+    if (!subscription || subscription.status !== 'active') {
+        redirect('/checkout');
+    }
     return (
         <div className={styles.layout}>
             <aside className={styles.sidebar}>
