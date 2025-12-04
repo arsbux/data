@@ -36,6 +36,11 @@ export default function DashboardLayout({
                         <span className={styles.navIcon}>💻</span>
                         Devices
                     </a>
+                    <div style={{ height: '1px', background: 'var(--border-primary)', margin: '1rem 0' }}></div>
+                    <a href="/dashboard/add-site" className={styles.navItem}>
+                        <span className={styles.navIcon}>➕</span>
+                        Add Site
+                    </a>
                 </nav>
             </aside>
             <main className={styles.main}>
