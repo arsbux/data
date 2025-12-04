@@ -134,59 +134,43 @@ export default function DashboardPage() {
       </div>
 
       <div className={styles.dataGrid}>
-        <div className="glass-card">
-          <h3 className={styles.cardTitle}>Top Referrers</h3>
-          <div className={styles.dataList}>
-            {referrers.length === 0 && <div className={styles.emptyState}>No data yet</div>}
-            {referrers.map((item, i) => (
-              <div key={i} className={styles.dataItem}>
-                <span className={styles.dataLabel}>{item.name}</span>
-                <span className={styles.dataValue}>{item.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <DataCard title="Top Referrers" data={referrers} />
+        <DataCard title="Top Pages" data={pages} />
+        <DataCard title="Top Locations" data={locations} type="country" />
+        <DataCard title="Devices" data={devices} type="device" />
+      </div>
+    </div>
+  );
+}
 
-        <div className="glass-card">
-          <h3 className={styles.cardTitle}>Top Pages</h3>
-          <div className={styles.dataList}>
-            {pages.length === 0 && <div className={styles.emptyState}>No data yet</div>}
-            {pages.map((item, i) => (
-              <div key={i} className={styles.dataItem}>
-                <span className={styles.dataLabel}>{item.name}</span>
-                <span className={styles.dataValue}>{item.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+function DataCard({ title, data, type }: { title: string, data: ListItem[], type?: 'country' | 'device' }) {
+  const maxValue = Math.max(...data.map(d => d.value), 0);
 
-        <div className="glass-card">
-          <h3 className={styles.cardTitle}>Top Locations</h3>
-          <div className={styles.dataList}>
-            {locations.length === 0 && <div className={styles.emptyState}>No data yet</div>}
-            {locations.map((item, i) => (
-              <div key={i} className={styles.dataItem}>
+  return (
+    <div className="glass-card">
+      <h3 className={styles.cardTitle}>{title}</h3>
+      <div className={styles.dataList}>
+        {data.length === 0 && <div className={styles.emptyState}>No data yet</div>}
+        {data.map((item, i) => {
+          const percent = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
+          return (
+            <div key={i} className={styles.dataItem}>
+              <div
+                className={styles.dataBar}
+                style={{ width: `${percent}%` }}
+              />
+              <div className={styles.dataContent}>
                 <span className={styles.dataLabel}>
-                  {item.code ? `${getFlagEmoji(item.code)} ` : ''}{item.name}
+                  {type === 'country' && item.code ? `${getFlagEmoji(item.code)} ` : ''}
+                  {item.name}
                 </span>
-                <span className={styles.dataValue}>{item.value}</span>
+                <span className={styles.dataValue}>
+                  {item.value}{type === 'device' ? '%' : ''}
+                </span>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="glass-card">
-          <h3 className={styles.cardTitle}>Devices</h3>
-          <div className={styles.dataList}>
-            {devices.length === 0 && <div className={styles.emptyState}>No data yet</div>}
-            {devices.map((item, i) => (
-              <div key={i} className={styles.dataItem}>
-                <span className={styles.dataLabel} style={{ textTransform: 'capitalize' }}>{item.name}</span>
-                <span className={styles.dataValue}>{item.value}%</span>
-              </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

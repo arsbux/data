@@ -101,20 +101,39 @@
 }
 
 .dataItem {
+    position: relative;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dataBar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: rgba(59, 130, 246, 0.15);
+    /* Muted blue */
+    border-radius: 4px;
+    transition: width 0.5s ease-out;
+}
+
+.dataContent {
+    position: relative;
+    z-index: 1;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.625rem 0;
-    border-bottom: 1px solid var(--border-primary);
-}
-
-.dataItem:last-child {
-    border-bottom: none;
+    padding: 0.5rem 0.75rem;
 }
 
 .dataLabel {
     font-size: 0.875rem;
-    color: var(--text-secondary);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 70%;
 }
 
 .dataValue {
