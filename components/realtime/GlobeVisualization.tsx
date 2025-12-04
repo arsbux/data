@@ -1,9 +1,7 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sphere } from '@react-three/drei';
-import * as THREE from 'three';
+import createGlobe from 'cobe';
+import { useEffect, useRef } from 'react';
 
 interface Visitor {
     id: string;
@@ -17,66 +15,54 @@ interface GlobeVisualizationProps {
     visitors: Visitor[];
 }
 
-function Globe({ visitors }: { visitors: Visitor[] }) {
-    const globeRef = useRef<THREE.Mesh>(null);
-
-    useFrame(() => {
-        if (globeRef.current) {
-            globeRef.current.rotation.y += 0.001;
-        }
-    });
-
-    // Convert lat/lng to 3D position
-    const getPosition = (lat: number, lng: number, radius: number) => {
-        const phi = (90 - lat) * (Math.PI / 180);
-        const theta = (lng + 180) * (Math.PI / 180);
-        const x = -(radius * Math.sin(phi) * Math.cos(theta));
-        const z = radius * Math.sin(phi) * Math.sin(theta);
-        const y = radius * Math.cos(phi);
-        return [x, y, z] as [number, number, number];
-    };
-
-    return (
-        <group>
-            {/* Earth Sphere */}
-            <Sphere ref={globeRef} args={[2, 64, 64]}>
-                <meshStandardMaterial
-                    color="#1a1a1a"
-                    emissive="#111111"
-                    roughness={0.7}
-                    metalness={0.1}
-                    wireframe={true}
-                />
-            </Sphere>
-
-            {/* Inner Sphere to block background */}
-            <Sphere args={[1.95, 64, 64]}>
-                <meshBasicMaterial color="#000" />
-            </Sphere>
-
-            {/* Visitor Markers */}
-            {visitors.map((visitor) => {
-                const position = getPosition(visitor.lat, visitor.lng, 2.05);
-                return (
-                    <mesh key={visitor.id} position={position}>
-                        <sphereGeometry args={[0.05, 16, 16]} />
-                        <meshBasicMaterial color="#3b82f6" />
-                    </mesh>
-                );
-            })}
-        </group>
-    );
-}
-
 export default function GlobeVisualization({ visitors = [] }: GlobeVisualizationProps) {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    useEffect(() => {
+        let phi = 0;
+
+        if (!canvasRef.current) return;
+
+        const globe = createGlobe(canvasRef.current, {
+            devicePixelRatio: 2,
+            width: canvasRef.current.clientWidth * 2,
+            height: canvasRef.current.clientHeight * 2,
+            phi: 0,
+            theta: 0,
+            dark: 1,
+            diffuse: 1.2,
+            mapSamples: 16000,
+            mapBrightness: 6,
+            baseColor: [0.3, 0.3, 0.3],
+            markerColor: [0.1, 0.8, 1],
+            glowColor: [0.1, 0.1, 0.2],
+            markers: visitors.map(v => ({ location: [v.lat, v.lng], size: 0.05 })),
+            onRender: (state) => {
+                // Called on every animation frame.
+                // state.phi = phi;
+                phi += 0.003;
+                state.phi = phi;
+            },
+        });
+
+        return () => {
+            globe.destroy();
+        };
+    }, [visitors]);
+
     return (
-        <div style={{ width: '100%', height: '600px', background: '#000' }}>
-            <Canvas camera={{ position: [0, 0, 6], fov: 45 }}>
-                <ambientLight intensity={0.5} />
-                <pointLight position={[10, 10, 10]} intensity={1} />
-                <Globe visitors={visitors} />
-                <OrbitControls enableZoom={false} autoRotate={false} />
-            </Canvas>
+        <div style={{ width: '100%', height: '100%', position: 'relative', background: '#000' }}>
+            <canvas
+                ref={canvasRef}
+                style={{ width: '100%', height: '100%', contain: 'layout paint size', opacity: 0, transition: 'opacity 1s ease' }}
+                onContextMenu={(e) => e.preventDefault()}
+            />
+            {/* Fade in effect */}
+            <style jsx>{`
+                canvas {
+                    opacity: 1 !important;
+                }
+            `}</style>
         </div>
     );
 }

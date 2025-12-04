@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import GlobeVisualization from '@/components/realtime/GlobeVisualization';
 import { createClient } from '@/lib/supabase/client';
-import styles from '../page.module.css';
+import { Maximize2, Minimize2, Share2, Music, User } from 'lucide-react';
 
 interface Visitor {
     id: string;
@@ -13,11 +13,14 @@ interface Visitor {
     city: string;
     page: string;
     lastSeen: string;
+    device: string;
+    referrer: string;
 }
 
 export default function RealtimePage() {
     const [visitors, setVisitors] = useState<Visitor[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     useEffect(() => {
         const supabase = createClient();
@@ -37,7 +40,9 @@ export default function RealtimePage() {
                     country: v.country_code || 'Unknown',
                     city: v.city || 'Unknown',
                     page: v.current_page,
-                    lastSeen: v.last_seen
+                    lastSeen: v.last_seen,
+                    device: v.device_type || 'Desktop',
+                    referrer: v.referrer_domain || 'Direct'
                 })));
             }
             setLoading(false);
@@ -49,7 +54,7 @@ export default function RealtimePage() {
         const channel = supabase
             .channel('realtime_visitors')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'active_visitors' }, (payload) => {
-                fetchVisitors(); // Refresh on any change for simplicity
+                fetchVisitors();
             })
             .subscribe();
 
@@ -58,42 +63,142 @@ export default function RealtimePage() {
         };
     }, []);
 
+    // Group stats
+    const referrers = visitors.reduce((acc, v) => {
+        acc[v.referrer] = (acc[v.referrer] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
+    const countries = visitors.reduce((acc, v) => {
+        acc[v.country] = (acc[v.country] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
+    const devices = visitors.reduce((acc, v) => {
+        acc[v.device] = (acc[v.device] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
     return (
-        <div className={styles.container}>
-            <div className={styles.header}>
-                <h1>Real-time Visitors</h1>
-                <div className={styles.liveIndicator} style={{ fontSize: '1.2rem' }}>
-                    ● {visitors.length} Active Users
+        <div style={{
+            width: '100%',
+            height: 'calc(100vh - 2rem)',
+            position: 'relative',
+            background: 'radial-gradient(circle at center, #111827 0%, #000 100%)',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            border: '1px solid #333'
+        }}>
+            {/* Starry Background (Simple CSS) */}
+            <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundImage: 'radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px), radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px), radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px)',
+                backgroundSize: '550px 550px, 350px 350px, 250px 250px',
+                backgroundPosition: '0 0, 40px 60px, 130px 270px',
+                opacity: 0.3
+            }}></div>
+
+            {/* Globe */}
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
+                <GlobeVisualization visitors={visitors} />
+            </div>
+
+            {/* Top Left Stats Card */}
+            <div style={{
+                position: 'absolute',
+                top: '20px',
+                left: '20px',
+                zIndex: 10,
+                background: 'rgba(20, 20, 20, 0.8)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '16px',
+                padding: '1.5rem',
+                width: '320px',
+                color: '#fff'
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: '#ff4f00' }}>
+                        <span>DataFast</span>
+                        <span style={{ color: '#666' }}>|</span>
+                        <span style={{ color: '#888' }}>REAL-TIME</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <User size={14} color="#888" />
+                        <Share2 size={14} color="#888" />
+                        <Music size={14} color="#888" />
+                        <Maximize2 size={14} color="#888" />
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                    <span style={{ width: '8px', height: '8px', background: '#3b82f6', borderRadius: '50%', boxShadow: '0 0 8px #3b82f6' }}></span>
+                    <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>{visitors.length} visitors on</span>
+                    <span style={{ fontWeight: 600, color: '#ff4f00' }}>producthuntr.com</span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.8rem', color: '#aaa' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Referrers</span>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            {Object.entries(referrers).slice(0, 2).map(([name, count]) => (
+                                <span key={name} style={{ color: '#fff' }}>{name === 'Direct' ? '∞ Direct' : name} ({count})</span>
+                            ))}
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Countries</span>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            {Object.entries(countries).slice(0, 2).map(([code, count]) => (
+                                <span key={code} style={{ color: '#fff' }}>{getFlagEmoji(code)} {code} ({count})</span>
+                            ))}
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Devices</span>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            {Object.entries(devices).slice(0, 2).map(([name, count]) => (
+                                <span key={name} style={{ color: '#fff' }}>🖥 {name} ({count})</span>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="glass-card" style={{ padding: 0, overflow: 'hidden', position: 'relative' }}>
-                <GlobeVisualization visitors={visitors} />
-
-                <div style={{
-                    position: 'absolute',
-                    top: '20px',
-                    left: '20px',
-                    background: 'rgba(0,0,0,0.7)',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    maxHeight: '400px',
-                    overflowY: 'auto',
-                    width: '300px'
-                }}>
-                    <h3 style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#9ca3af' }}>Live Feed</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        {visitors.map(v => (
-                            <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem' }}>
-                                <span style={{ fontSize: '1.2rem' }}>{getFlagEmoji(v.country)}</span>
-                                <div>
-                                    <div style={{ fontWeight: 600 }}>{v.city || 'Unknown'}</div>
-                                    <div style={{ color: '#9ca3af', fontSize: '0.75rem' }}>Visited {v.page}</div>
-                                </div>
+            {/* Bottom Left Live Feed */}
+            <div style={{
+                position: 'absolute',
+                bottom: '20px',
+                left: '20px',
+                zIndex: 10,
+                background: 'rgba(20, 20, 20, 0.8)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '16px',
+                padding: '1rem',
+                width: '320px',
+                maxHeight: '300px',
+                overflowY: 'hidden',
+                color: '#fff'
+            }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {visitors.slice(0, 5).map((v, i) => (
+                        <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.8rem', opacity: 1 - (i * 0.15) }}>
+                            <span style={{ fontSize: '1rem' }}>👁</span>
+                            <div>
+                                <span style={{ color: '#fff', fontWeight: 600 }}>{v.city || 'Unknown visitor'}</span>
+                                <span style={{ color: '#888' }}> from </span>
+                                <span style={{ color: '#fff' }}>{getFlagEmoji(v.country)} {v.country}</span>
+                                <span style={{ color: '#888' }}> visited </span>
+                                <span style={{ color: '#fff', fontFamily: 'monospace' }}>{v.page}</span>
                             </div>
-                        ))}
-                        {visitors.length === 0 && <div style={{ color: '#666' }}>No active visitors</div>}
-                    </div>
+                        </div>
+                    ))}
+                    {visitors.length === 0 && <div style={{ color: '#666', fontSize: '0.8rem' }}>Waiting for visitors...</div>}
                 </div>
             </div>
         </div>
@@ -102,9 +207,13 @@ export default function RealtimePage() {
 
 function getFlagEmoji(countryCode: string) {
     if (!countryCode || countryCode === 'Unknown') return '🌍';
-    const codePoints = countryCode
-        .toUpperCase()
-        .split('')
-        .map(char => 127397 + char.charCodeAt(0));
-    return String.fromCodePoint(...codePoints);
+    try {
+        const codePoints = countryCode
+            .toUpperCase()
+            .split('')
+            .map(char => 127397 + char.charCodeAt(0));
+        return String.fromCodePoint(...codePoints);
+    } catch {
+        return '🌍';
+    }
 }
