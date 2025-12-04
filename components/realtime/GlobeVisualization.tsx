@@ -74,7 +74,7 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
     const visitorsWithAvatars = useMemo(() => {
         return visitors.map(v => ({
             ...v,
-            avatarUrl: v.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${v.id}&backgroundColor=b6e3f4`
+            avatarUrl: v.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${v.id}&backgroundColor=000000`
         }));
     }, [visitors]);
 
@@ -109,7 +109,7 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
                 labelLat={(d: any) => getCentroid(d).lat}
                 labelLng={(d: any) => getCentroid(d).lng}
                 labelText={(d: any) => d.properties.NAME || d.properties.name}
-                labelSize={0.5}
+                labelSize={0.6}
                 labelDotRadius={0.3}
                 labelColor={() => 'rgba(200, 200, 200, 0.75)'}
                 labelResolution={3}
@@ -131,7 +131,7 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
                                 overflow: hidden; 
                                 border: 2px solid #fff; 
                                 box-shadow: 0 0 10px rgba(0,0,0,0.5);
-                                background: #fff;
+                                background: #000;
                                 transition: transform 0.2s;
                             ">
                                 <img src="${d.avatarUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
