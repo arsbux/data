@@ -67,8 +67,19 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
                 polygonsData={countries.features}
                 polygonCapColor={() => 'rgba(20, 20, 20, 0.7)'} // Dark fill
                 polygonSideColor={() => 'rgba(0, 0, 0, 0)'}
-                polygonStrokeColor={() => '#333'} // Visible borders
+                polygonStrokeColor={() => 'rgba(255, 255, 255, 0.3)'} // More visible borders
                 polygonAltitude={0.01}
+
+                // Country Labels
+                labelsData={countries.features}
+                labelLat={(d: any) => d.properties.LABEL_Y || d.properties.label_y || 0} // Use pre-calculated labels if available, otherwise 0 (fallback)
+                labelLng={(d: any) => d.properties.LABEL_X || d.properties.label_x || 0}
+                labelText={(d: any) => d.properties.NAME || d.properties.name}
+                labelSize={1.5}
+                labelDotRadius={0.3}
+                labelColor={() => 'rgba(255, 255, 255, 0.6)'}
+                labelResolution={2}
+                labelAltitude={0.015}
 
                 // HTML Elements (Avatars)
                 htmlElementsData={visitorsWithAvatars}
