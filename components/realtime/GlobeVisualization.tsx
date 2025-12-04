@@ -22,14 +22,16 @@ interface GlobeVisualizationProps {
     visitors: Visitor[];
 }
 
-// Helper to calculate centroid
+import polylabel from 'polylabel';
+
+// Helper to calculate centroid using polylabel for better positioning
 const getCentroid = (feature: any) => {
     if (!feature || !feature.geometry) return { lat: 0, lng: 0 };
 
-    let points: any[] = [];
+    let polygon: any[] = [];
 
     if (feature.geometry.type === 'Polygon') {
-        points = feature.geometry.coordinates[0];
+        polygon = feature.geometry.coordinates;
     } else if (feature.geometry.type === 'MultiPolygon') {
         // Find largest polygon by number of points as a proxy for area
         let maxPoints = 0;
@@ -41,22 +43,17 @@ const getCentroid = (feature: any) => {
                 maxPoly = poly;
             }
         });
-        points = maxPoly[0];
+        polygon = maxPoly;
     }
 
-    if (!points || !points.length) return { lat: 0, lng: 0 };
+    if (!polygon || !polygon.length) return { lat: 0, lng: 0 };
 
-    let sumLat = 0;
-    let sumLng = 0;
-
-    points.forEach(p => {
-        sumLng += p[0];
-        sumLat += p[1];
-    });
+    // polylabel returns [x, y] (lng, lat)
+    const center = polylabel(polygon, 1.0);
 
     return {
-        lng: sumLng / points.length,
-        lat: sumLat / points.length
+        lng: center[0],
+        lat: center[1]
     };
 };
 
@@ -85,9 +82,8 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
         if (globeEl.current) {
             // Auto-rotate
             globeEl.current.controls().autoRotate = true;
-            globeEl.current.controls().autoRotateSpeed = 0.5;
-
-            // Set initial point of view if needed, but auto-rotate handles it
+            globeEl.current.controls().autoRotateSpeed = 0.3; // Slower rotation for better performance feel
+            globeEl.current.controls().enableZoom = true;
         }
     }, [mounted]);
 
@@ -98,14 +94,14 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
             <Globe
                 ref={globeEl}
                 globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
-                bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
-                backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
+                // Removed bump map and background image for performance
+                backgroundColor="rgba(0,0,0,0)"
 
                 // Country Borders (Polygons)
                 polygonsData={countries.features}
                 polygonCapColor={() => 'rgba(20, 20, 20, 0.7)'} // Dark fill
                 polygonSideColor={() => 'rgba(0, 0, 0, 0)'}
-                polygonStrokeColor={() => 'rgba(255, 255, 255, 0.3)'} // More visible borders
+                polygonStrokeColor={() => 'rgba(255, 255, 255, 0.2)'} // Subtle borders
                 polygonAltitude={0.01}
 
                 // Country Labels
@@ -113,7 +109,7 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
                 labelLat={(d: any) => getCentroid(d).lat}
                 labelLng={(d: any) => getCentroid(d).lng}
                 labelText={(d: any) => d.properties.NAME || d.properties.name}
-                labelSize={0.6}
+                labelSize={0.5}
                 labelDotRadius={0.3}
                 labelColor={() => 'rgba(200, 200, 200, 0.75)'}
                 labelResolution={3}
