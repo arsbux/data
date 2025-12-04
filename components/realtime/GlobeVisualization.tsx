@@ -22,6 +22,44 @@ interface GlobeVisualizationProps {
     visitors: Visitor[];
 }
 
+// Helper to calculate centroid
+const getCentroid = (feature: any) => {
+    if (!feature || !feature.geometry) return { lat: 0, lng: 0 };
+
+    let points: any[] = [];
+
+    if (feature.geometry.type === 'Polygon') {
+        points = feature.geometry.coordinates[0];
+    } else if (feature.geometry.type === 'MultiPolygon') {
+        // Find largest polygon by number of points as a proxy for area
+        let maxPoints = 0;
+        let maxPoly = feature.geometry.coordinates[0];
+
+        feature.geometry.coordinates.forEach((poly: any[]) => {
+            if (poly[0].length > maxPoints) {
+                maxPoints = poly[0].length;
+                maxPoly = poly;
+            }
+        });
+        points = maxPoly[0];
+    }
+
+    if (!points || !points.length) return { lat: 0, lng: 0 };
+
+    let sumLat = 0;
+    let sumLng = 0;
+
+    points.forEach(p => {
+        sumLng += p[0];
+        sumLat += p[1];
+    });
+
+    return {
+        lng: sumLng / points.length,
+        lat: sumLat / points.length
+    };
+};
+
 export default function GlobeVisualization({ visitors = [] }: GlobeVisualizationProps) {
     const globeEl = useRef<any>();
     const [countries, setCountries] = useState({ features: [] });
@@ -72,14 +110,15 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
 
                 // Country Labels
                 labelsData={countries.features}
-                labelLat={(d: any) => d.properties.LABEL_Y || d.properties.label_y || 0} // Use pre-calculated labels if available, otherwise 0 (fallback)
-                labelLng={(d: any) => d.properties.LABEL_X || d.properties.label_x || 0}
+                labelLat={(d: any) => getCentroid(d).lat}
+                labelLng={(d: any) => getCentroid(d).lng}
                 labelText={(d: any) => d.properties.NAME || d.properties.name}
-                labelSize={1.5}
+                labelSize={1.2}
                 labelDotRadius={0.3}
-                labelColor={() => 'rgba(255, 255, 255, 0.6)'}
+                labelColor={() => 'rgba(255, 255, 255, 0.75)'}
                 labelResolution={2}
                 labelAltitude={0.015}
+                labelIncludeDot={false}
 
                 // HTML Elements (Avatars)
                 htmlElementsData={visitorsWithAvatars}
