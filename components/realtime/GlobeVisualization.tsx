@@ -113,11 +113,11 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
                 labelLat={(d: any) => getCentroid(d).lat}
                 labelLng={(d: any) => getCentroid(d).lng}
                 labelText={(d: any) => d.properties.NAME || d.properties.name}
-                labelSize={1.2}
+                labelSize={0.6}
                 labelDotRadius={0.3}
-                labelColor={() => 'rgba(255, 255, 255, 0.75)'}
-                labelResolution={2}
-                labelAltitude={0.015}
+                labelColor={() => 'rgba(200, 200, 200, 0.75)'}
+                labelResolution={3}
+                labelAltitude={0.005}
                 labelIncludeDot={false}
 
                 // HTML Elements (Avatars)
