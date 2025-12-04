@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import DataTable from '@/components/dashboard/DataTable';
+import LocationMap from '@/components/dashboard/LocationMap';
 import styles from '../page.module.css';
 
 export default function LocationsPage() {
@@ -63,6 +64,10 @@ export default function LocationsPage() {
                     </button>
                 ))}
             </div>
+
+            {activeTab === 'country' && !loading && (
+                <LocationMap data={data} />
+            )}
 
             <DataTable columns={columns} data={data} loading={loading} />
         </div>

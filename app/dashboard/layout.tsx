@@ -1,3 +1,12 @@
+import {
+    LayoutDashboard,
+    Globe,
+    FileText,
+    Link as LinkIcon,
+    Map,
+    Monitor,
+    Plus
+} from 'lucide-react';
 import styles from './dashboard.module.css';
 
 export default function DashboardLayout({
@@ -9,36 +18,39 @@ export default function DashboardLayout({
         <div className={styles.layout}>
             <aside className={styles.sidebar}>
                 <div className={styles.sidebarHeader}>
-                    <h1 className={styles.logo}>📊 Trackify</h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{ width: '24px', height: '24px', background: '#3b82f6', borderRadius: '4px' }}></div>
+                        <h1 className={styles.logo}>Trackify</h1>
+                    </div>
                 </div>
                 <nav className={styles.nav}>
                     <a href="/dashboard" className={styles.navItem}>
-                        <span className={styles.navIcon}>📈</span>
+                        <LayoutDashboard size={20} />
                         Dashboard
                     </a>
                     <a href="/dashboard/realtime" className={styles.navItem}>
-                        <span className={styles.navIcon}>🌍</span>
+                        <Globe size={20} />
                         Real-time
                     </a>
                     <a href="/dashboard/pages" className={styles.navItem}>
-                        <span className={styles.navIcon}>📄</span>
+                        <FileText size={20} />
                         Pages
                     </a>
                     <a href="/dashboard/referrers" className={styles.navItem}>
-                        <span className={styles.navIcon}>🔗</span>
+                        <LinkIcon size={20} />
                         Referrers
                     </a>
                     <a href="/dashboard/locations" className={styles.navItem}>
-                        <span className={styles.navIcon}>🗺️</span>
+                        <Map size={20} />
                         Locations
                     </a>
                     <a href="/dashboard/devices" className={styles.navItem}>
-                        <span className={styles.navIcon}>💻</span>
+                        <Monitor size={20} />
                         Devices
                     </a>
                     <div style={{ height: '1px', background: 'var(--border-primary)', margin: '1rem 0' }}></div>
                     <a href="/dashboard/add-site" className={styles.navItem}>
-                        <span className={styles.navIcon}>➕</span>
+                        <Plus size={20} />
                         Add Site
                     </a>
                 </nav>
