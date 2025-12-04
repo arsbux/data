@@ -81,9 +81,12 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
     useEffect(() => {
         if (globeEl.current) {
             // Auto-rotate
-            globeEl.current.controls().autoRotate = true;
-            globeEl.current.controls().autoRotateSpeed = 0.3; // Slower rotation for better performance feel
-            globeEl.current.controls().enableZoom = true;
+            const controls = globeEl.current.controls();
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.5;
+            controls.enableZoom = true;
+            controls.minDistance = 120; // Prevent zooming inside the globe
+            controls.maxDistance = 400;
         }
     }, [mounted]);
 

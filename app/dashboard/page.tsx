@@ -37,7 +37,7 @@ export default function DashboardPage() {
   const [devices, setDevices] = useState<ListItem[]>([]);
 
   const [loading, setLoading] = useState(true);
-  const [range, setRange] = useState('7d');
+  const [range, setRange] = useState('24h');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,12 +66,12 @@ export default function DashboardPage() {
         const locationsData = await locationsRes.json();
         const devicesData = await devicesRes.json();
 
-        setStats(overview);
-        setTimeline(timelineData);
-        setReferrers(referrersData);
-        setPages(pagesData);
-        setLocations(locationsData);
-        setDevices(devicesData);
+        setStats(overview.error ? { visitors: 0, pageViews: 0, bounceRate: 0, avgSessionTime: 0 } : overview);
+        setTimeline(Array.isArray(timelineData) ? timelineData : []);
+        setReferrers(Array.isArray(referrersData) ? referrersData : []);
+        setPages(Array.isArray(pagesData) ? pagesData : []);
+        setLocations(Array.isArray(locationsData) ? locationsData : []);
+        setDevices(Array.isArray(devicesData) ? devicesData : []);
       } catch (error) {
         console.error('Failed to fetch dashboard data', error);
       } finally {
