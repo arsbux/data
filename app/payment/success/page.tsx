@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Suspense } from 'react';
 
 function SuccessContent() {
@@ -11,8 +10,69 @@ function SuccessContent() {
     const plan = searchParams.get('plan') || 'lifetime';
     const paymentId = searchParams.get('payment_id');
     const email = searchParams.get('email');
+    const status = searchParams.get('status');
 
-    const [loading, setLoading] = useState(false);
+    // Check if payment failed
+    const isFailed = status === 'failed' || status === 'cancelled' || status === 'canceled';
+
+    if (isFailed) {
+        return (
+            <div style={{
+                minHeight: '100vh',
+                backgroundColor: '#000',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '2rem',
+                fontFamily: 'system-ui, -apple-system, sans-serif'
+            }}>
+                <div style={{ maxWidth: '480px', textAlign: 'center' }}>
+                    <div style={{
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 2rem'
+                    }}>
+                        <XCircle size={40} color="#ef4444" />
+                    </div>
+
+                    <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1rem' }}>
+                        Payment Failed
+                    </h1>
+
+                    <p style={{ color: '#9ca3af', marginBottom: '2rem', lineHeight: 1.6 }}>
+                        Unfortunately, your payment could not be processed. Please try again or use a different payment method.
+                    </p>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                        <Link
+                            href={`/checkout`}
+                            style={{
+                                display: 'inline-block',
+                                padding: '1rem 2rem',
+                                backgroundColor: '#2563eb',
+                                color: '#fff',
+                                borderRadius: '12px',
+                                fontWeight: 600,
+                                textDecoration: 'none'
+                            }}
+                        >
+                            Try Again
+                        </Link>
+
+                        <Link href="/" style={{ color: '#6b7280', fontSize: '0.875rem', textDecoration: 'none' }}>
+                            Return to Home
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div style={{
