@@ -41,7 +41,8 @@ export async function GET(req: Request) {
         const response = await fetch(`${baseUrl}/payments`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                // Try Basic auth - some APIs use this format
+                'Authorization': `Basic ${Buffer.from(apiKey + ':').toString('base64')}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
