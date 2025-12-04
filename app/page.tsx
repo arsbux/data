@@ -26,8 +26,8 @@ const mockReferrers = [
   { name: 'X (Twitter)', value: 8000, icon: '𝕏' },
   { name: 'Direct / None', value: 3400 },
   { name: 'Google', value: 2500, icon: 'G' },
-  { name: 'marclou.com', value: 2100 },
-  { name: 'trustmrr.com', value: 648 },
+  { name: 'reddit.com', value: 2100 },
+  { name: 'producthunt.com', value: 1248 },
   { name: 'YouTube', value: 545, icon: '▶' },
 ];
 
@@ -42,10 +42,10 @@ const mockCountries = [
 
 const mockPages = [
   { name: '/', value: 21600 },
-  { name: '/fundamentals/intro_fund/youtube', value: 179 },
-  { name: '/mindset/how-to/how-to-ship-fast', value: 145 },
-  { name: '/fundamentals/html/html-structure', value: 145 },
-  { name: '/business/get-started/terminal', value: 129 },
+  { name: '/pricing', value: 4820 },
+  { name: '/blog/getting-started', value: 2145 },
+  { name: '/features', value: 1890 },
+  { name: '/docs/api', value: 1456 },
 ];
 
 const mockBrowsers = [
