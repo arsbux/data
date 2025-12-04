@@ -35,7 +35,10 @@ export default function LoginPage() {
         <div className={styles.container}>
             <div className={styles.card}>
                 <div className={styles.header}>
-                    <h1 className={styles.logo}>📊 Trackify</h1>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                        <img src="/logo.png" alt="Fast Data Logo" style={{ width: '32px', height: '32px', borderRadius: '6px' }} />
+                        <h1 className={styles.logo}>Fast Data</h1>
+                    </div>
                     <p className={styles.subtitle}>Welcome back! Sign in to your account</p>
                 </div>
 
