@@ -95,17 +95,25 @@ export default function LandingPage() {
           .landing-globe { height: 280px !important; }
           .landing-stats { gap: 1rem !important; flex-wrap: wrap !important; }
           .landing-heading { font-size: 1.75rem !important; }
-          .landing-metrics { grid-template-columns: repeat(2, 1fr) !important; gap: 1rem !important; }
+          .landing-metrics { grid-template-columns: repeat(2, 1fr) !important; gap: 0.75rem !important; }
           .landing-chart { height: 180px !important; }
           .landing-pricing { grid-template-columns: 1fr !important; }
-          .landing-hero-buttons { flex-direction: column !important; width: 100% !important; }
-          .landing-hero-buttons a { width: 100% !important; text-align: center !important; }
+          .landing-hero-buttons { flex-direction: column !important; width: 100% !important; gap: 0.75rem !important; }
+          .landing-hero-buttons a { width: 100% !important; text-align: center !important; justify-content: center !important; }
           .landing-nav-cta { padding: 0.4rem 0.75rem !important; font-size: 0.75rem !important; }
           .landing-footer-links { flex-direction: column !important; gap: 1rem !important; }
+          .landing-hero { padding-top: 100px !important; padding-bottom: 40px !important; }
+          .landing-hero h1 { font-size: 1.875rem !important; line-height: 1.15 !important; margin-bottom: 1rem !important; }
+          .landing-hero p { font-size: 1rem !important; margin-bottom: 2rem !important; }
+          .landing-hero-badge { font-size: 0.7rem !important; }
+          .landing-dashboard-preview { padding: 1rem !important; margin: 0 -0.5rem !important; border-radius: 12px !important; }
         }
         @media (max-width: 480px) {
-          .landing-metrics { grid-template-columns: 1fr 1fr !important; }
-          .landing-hero-badge { font-size: 0.75rem !important; padding: 0.2rem 0.5rem !important; }
+          .landing-metrics { grid-template-columns: 1fr 1fr !important; gap: 0.5rem !important; }
+          .landing-hero h1 { font-size: 1.625rem !important; }
+          .landing-hero-badge { font-size: 0.65rem !important; padding: 0.2rem 0.5rem !important; }
+          .landing-metric-value { font-size: 1.25rem !important; }
+          .landing-metric-label { font-size: 0.7rem !important; }
         }
       `}</style>
       <div style={{ minHeight: '100vh', backgroundColor: '#000', color: '#fff', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -162,9 +170,9 @@ export default function LandingPage() {
         </nav>
 
         {/* Hero Section */}
-        <section style={{ paddingTop: '140px', paddingBottom: '60px', paddingLeft: '1rem', paddingRight: '1rem' }}>
+        <section className="landing-hero" style={{ paddingTop: '140px', paddingBottom: '60px', paddingLeft: '1rem', paddingRight: '1rem' }}>
           <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
-            <div style={{
+            <div className="landing-hero-badge" style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem',
@@ -175,7 +183,7 @@ export default function LandingPage() {
               color: '#60a5fa',
               fontSize: '0.875rem',
               fontWeight: 500,
-              marginBottom: '2rem'
+              marginBottom: '1.5rem'
             }}>
               <span style={{
                 width: '8px',
