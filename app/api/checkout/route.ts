@@ -6,13 +6,12 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const plan = searchParams.get('plan') || 'lifetime';
 
-    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://data.flightlabs.agency';
 
-    // Dodo Payments hosted checkout URLs
-    // Test mode URLs - replace with live URLs in production
+    // Dodo Payments hosted checkout URLs (Live mode)
     const checkoutUrls: Record<string, string> = {
-        monthly: process.env.DODO_MONTHLY_CHECKOUT_URL || 'https://test.checkout.dodopayments.com/buy/pdt_FOLHZX1IzYeWF6u8xiplY',
-        lifetime: process.env.DODO_LIFETIME_CHECKOUT_URL || 'https://test.checkout.dodopayments.com/buy/pdt_PgzTZqE1x7POKXE5D60P0',
+        monthly: process.env.DODO_MONTHLY_CHECKOUT_URL || 'https://checkout.dodopayments.com/buy/pdt_rCRoBUAxpCW5vqI1Sq40M',
+        lifetime: process.env.DODO_LIFETIME_CHECKOUT_URL || 'https://checkout.dodopayments.com/buy/pdt_mK9zq3n6ynIfCckFzlbAB',
     };
 
     const checkoutUrl = checkoutUrls[plan];
