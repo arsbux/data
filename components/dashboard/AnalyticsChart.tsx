@@ -4,6 +4,8 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useState } from 'react';
 import { ChevronDown, RefreshCw, ChevronLeft, ChevronRight, CheckSquare, Square, Settings } from 'lucide-react';
 
+import SiteSelector from './SiteSelector';
+
 interface AnalyticsChartProps {
     stats: {
         visitors: number;
@@ -15,9 +17,11 @@ interface AnalyticsChartProps {
     data: { date: string; visitors: number }[];
     range: string;
     onRangeChange: (range: string) => void;
+    selectedSiteId: string | null;
+    onSiteChange: (siteId: string) => void;
 }
 
-export default function AnalyticsChart({ stats, visitorsNow, data, range, onRangeChange }: AnalyticsChartProps) {
+export default function AnalyticsChart({ stats, visitorsNow, data, range, onRangeChange, selectedSiteId, onSiteChange }: AnalyticsChartProps) {
     const formatDuration = (seconds: number) => {
         const minutes = Math.floor(seconds / 60);
         const secs = Math.round(seconds % 60);
@@ -76,22 +80,7 @@ export default function AnalyticsChart({ stats, visitorsNow, data, range, onRang
 
                 {/* Site Selector */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        background: '#1a1a1a',
-                        padding: '0.5rem 1rem',
-                        borderRadius: '8px',
-                        border: '1px solid #333',
-                        cursor: 'pointer'
-                    }}>
-                        <div style={{ width: '20px', height: '20px', background: '#ff4f00', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ fontSize: '12px' }}>🐶</span>
-                        </div>
-                        <span style={{ fontWeight: 500, fontSize: '0.875rem' }}>producthuntr.com</span>
-                        <ChevronDown size={14} style={{ opacity: 0.5 }} />
-                    </div>
+                    <SiteSelector selectedSiteId={selectedSiteId} onSiteChange={onSiteChange} />
                     <button style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer' }}>
                         <Settings size={16} />
                     </button>
@@ -157,22 +146,6 @@ export default function AnalyticsChart({ stats, visitorsNow, data, range, onRang
                         <span style={{ fontSize: '0.875rem', color: '#ccc' }}>Visitors</span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 700, color: '#fff' }}>{stats.visitors.toLocaleString()}</div>
-                </div>
-
-                {/* Inactive Metrics */}
-                <div style={{ opacity: 0.5 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                        <Square size={16} color="#444" />
-                        <span style={{ fontSize: '0.875rem', color: '#888' }}>Your #1 KPI</span>
-                    </div>
-                    <div style={{ fontSize: '2rem', fontWeight: 700, color: '#888' }}>-</div>
-                </div>
-
-                <div style={{ opacity: 0.5 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                        <span style={{ fontSize: '0.875rem', color: '#888' }}>Conversion rate</span>
-                    </div>
-                    <div style={{ fontSize: '2rem', fontWeight: 700, color: '#888' }}>-</div>
                 </div>
 
                 <div>

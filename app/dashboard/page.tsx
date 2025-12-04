@@ -38,11 +38,13 @@ export default function DashboardPage() {
 
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState('24h');
+  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        const queryParams = `?range=${range}${selectedSiteId ? `&siteId=${selectedSiteId}` : ''}`;
         const [
           overviewRes,
           timelineRes,
@@ -51,12 +53,12 @@ export default function DashboardPage() {
           locationsRes,
           devicesRes
         ] = await Promise.all([
-          fetch(`/api/analytics/overview?range=${range}`),
-          fetch(`/api/analytics/timeline?range=${range}`),
-          fetch(`/api/analytics/referrers?range=${range}`),
-          fetch(`/api/analytics/pages?range=${range}`),
-          fetch(`/api/analytics/locations?range=${range}`),
-          fetch(`/api/analytics/devices?range=${range}`)
+          fetch(`/api/analytics/overview${queryParams}`),
+          fetch(`/api/analytics/timeline${queryParams}`),
+          fetch(`/api/analytics/referrers${queryParams}`),
+          fetch(`/api/analytics/pages${queryParams}`),
+          fetch(`/api/analytics/locations${queryParams}`),
+          fetch(`/api/analytics/devices${queryParams}`)
         ]);
 
         const overview = await overviewRes.json();
@@ -80,7 +82,7 @@ export default function DashboardPage() {
     };
 
     fetchData();
-  }, [range]);
+  }, [range, selectedSiteId]);
 
   // Live visitor polling
   useEffect(() => {
@@ -130,6 +132,8 @@ export default function DashboardPage() {
           data={timeline}
           range={range}
           onRangeChange={setRange}
+          selectedSiteId={selectedSiteId}
+          onSiteChange={setSelectedSiteId}
         />
       </div>
 

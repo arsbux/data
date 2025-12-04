@@ -19,8 +19,8 @@ export default function DashboardLayout({
             <aside className={styles.sidebar}>
                 <div className={styles.sidebarHeader}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{ width: '24px', height: '24px', background: '#3b82f6', borderRadius: '4px' }}></div>
-                        <h1 className={styles.logo}>Trackify</h1>
+                        <img src="/logo.png" alt="Fast Data Logo" style={{ width: '24px', height: '24px', borderRadius: '4px' }} />
+                        <h1 className={styles.logo}>Fast Data</h1>
                     </div>
                 </div>
                 <nav className={styles.nav}>
