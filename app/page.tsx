@@ -252,10 +252,9 @@ export default function LandingPage() {
                 borderBottom: '1px solid rgba(255,255,255,0.1)'
               }}>
                 <MetricCard label="Visitors" value="20.4k" change="-7.2%" negative />
-                <MetricCard label="Revenue" value="$27.4k" change="+29.2%" />
-                <MetricCard label="Conversion" value="0.54%" change="+36.2%" />
-                <MetricCard label="Bounce rate" value="83%" change="-0.7%" />
-                <MetricCard label="Session time" value="2m 36s" change="-10%" negative />
+                <MetricCard label="Page views" value="48.2k" change="+12.5%" />
+                <MetricCard label="Bounce rate" value="42%" change="-3.2%" />
+                <MetricCard label="Session time" value="2m 36s" change="+8%" />
                 <MetricCard label="Visitors now" value="13" live />
               </div>
 
