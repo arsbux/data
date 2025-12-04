@@ -32,19 +32,35 @@ export async function GET(req: Request) {
     }
 
     try {
-        // Create a payment link using Dodo Payments SDK
-        const paymentLink: any = await dodo.paymentLinks.create({
-            product_id: productIds[plan],
-            redirect_url: `${origin}/payment/success?plan=${plan}`,
-        });
+        // Create a payment using Dodo Payments SDK
+        const payment: any = await dodo.payments.create({
+            billing: {
+                city: '',
+                country: 'US',
+                state: '',
+                street: '',
+                zipcode: '',
+            },
+            customer: {
+                email: '',
+                name: '',
+            },
+            product_cart: [
+                {
+                    product_id: productIds[plan],
+                    quantity: 1,
+                }
+            ],
+            return_url: `${origin}/payment/success?plan=${plan}`,
+        } as any);
 
         // Redirect to Dodo's hosted checkout page
-        if (paymentLink.url) {
-            return NextResponse.redirect(paymentLink.url);
+        if (payment.payment_link) {
+            return NextResponse.redirect(payment.payment_link);
         }
 
-        // Fallback - return the payment link data
-        return NextResponse.json(paymentLink);
+        // Fallback - return the payment data
+        return NextResponse.json(payment);
     } catch (error: any) {
         console.error('Checkout error:', error);
 
