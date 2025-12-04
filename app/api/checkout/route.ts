@@ -1,96 +1,30 @@
 import { NextResponse } from 'next/server';
 
-// This endpoint creates a Dodo Payments checkout session and redirects to their hosted page
-// No auth required - user pays first, then creates account after payment success
+// This endpoint redirects to Dodo Payments hosted checkout pages
+// No API call needed - just redirect to the checkout URL
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const plan = searchParams.get('plan') || 'lifetime';
 
     const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const apiKey = process.env.DODO_PAYMENTS_API_KEY;
 
-    // Check if API key is configured
-    if (!apiKey) {
-        console.error('DODO_PAYMENTS_API_KEY is not set');
-        return NextResponse.json({
-            error: 'Payment system not configured. Please set DODO_PAYMENTS_API_KEY in environment variables.'
-        }, { status: 500 });
-    }
-
-    // You need to create these products in your Dodo Payments Dashboard
-    const productIds: Record<string, string> = {
-        monthly: process.env.DODO_MONTHLY_PRODUCT_ID || '',
-        lifetime: process.env.DODO_LIFETIME_PRODUCT_ID || '',
+    // Dodo Payments hosted checkout URLs
+    // Test mode URLs - replace with live URLs in production
+    const checkoutUrls: Record<string, string> = {
+        monthly: process.env.DODO_MONTHLY_CHECKOUT_URL || 'https://test.checkout.dodopayments.com/buy/pdt_FOLHZX1IzYeWF6u8xiplY',
+        lifetime: process.env.DODO_LIFETIME_CHECKOUT_URL || 'https://test.checkout.dodopayments.com/buy/pdt_PgzTZqE1x7POKXE5D60P0',
     };
 
-    if (!productIds[plan]) {
-        console.error(`Product ID not configured for plan: ${plan}`);
+    const checkoutUrl = checkoutUrls[plan];
+
+    if (!checkoutUrl) {
         return NextResponse.json({
-            error: `Product ID not configured for ${plan} plan. Please set DODO_${plan.toUpperCase()}_PRODUCT_ID in environment variables.`
-        }, { status: 500 });
+            error: `Invalid plan: ${plan}`
+        }, { status: 400 });
     }
 
-    try {
-        // Use fetch directly to call Dodo Payments API
-        // Test mode: https://test.dodopayments.com
-        // Live mode: https://live.dodopayments.com
-        const baseUrl = process.env.NODE_ENV === 'production'
-            ? 'https://live.dodopayments.com'
-            : 'https://test.dodopayments.com';
+    // Add return URL as query param so Dodo knows where to redirect after payment
+    const redirectUrl = `${checkoutUrl}?quantity=1&redirect_url=${encodeURIComponent(`${origin}/payment/success?plan=${plan}`)}`;
 
-        const response = await fetch(`${baseUrl}/payments`, {
-            method: 'POST',
-            headers: {
-                // Try Basic auth - some APIs use this format
-                'Authorization': `Basic ${Buffer.from(apiKey + ':').toString('base64')}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                billing: {
-                    city: 'New York',
-                    country: 'US',
-                    state: 'NY',
-                    street: '123 Main St',
-                    zipcode: '10001',
-                },
-                customer: {
-                    email: 'customer@example.com', // Dodo will prompt user for real email
-                    name: 'Customer',
-                },
-                product_cart: [
-                    {
-                        product_id: productIds[plan],
-                        quantity: 1,
-                    }
-                ],
-                return_url: `${origin}/payment/success?plan=${plan}`,
-            }),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.text();
-            console.error('Dodo API error:', response.status, errorData);
-            return NextResponse.json({
-                error: `Dodo API error: ${response.status}`,
-                details: errorData
-            }, { status: response.status });
-        }
-
-        const payment = await response.json();
-        console.log('Payment created:', payment);
-
-        // Redirect to Dodo's hosted checkout page
-        if (payment.payment_link) {
-            return NextResponse.redirect(payment.payment_link);
-        }
-
-        // Fallback - return the payment data for debugging
-        return NextResponse.json({
-            message: 'Payment created but no payment_link returned',
-            payment
-        });
-    } catch (error: any) {
-        console.error('Checkout error:', error);
-        return NextResponse.json({ error: error.message || 'Checkout failed' }, { status: 500 });
-    }
+    return NextResponse.redirect(redirectUrl);
 }
