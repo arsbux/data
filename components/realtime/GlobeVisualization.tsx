@@ -17,6 +17,8 @@ interface GlobeVisualizationProps {
 
 export default function GlobeVisualization({ visitors = [] }: GlobeVisualizationProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const pointerInteracting = useRef<number | null>(null);
+    const pointerInteractionMovement = useRef(0);
 
     useEffect(() => {
         let phi = 0;
@@ -39,9 +41,10 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
             markers: visitors.map(v => ({ location: [v.lat, v.lng], size: 0.05 })),
             onRender: (state) => {
                 // Called on every animation frame.
-                // state.phi = phi;
-                phi += 0.003;
-                state.phi = phi;
+                if (!pointerInteracting.current) {
+                    phi += 0.003;
+                }
+                state.phi = phi + pointerInteractionMovement.current;
             },
         });
 
@@ -54,8 +57,31 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
         <div style={{ width: '100%', height: '100%', position: 'relative', background: '#000' }}>
             <canvas
                 ref={canvasRef}
-                style={{ width: '100%', height: '100%', contain: 'layout paint size', opacity: 0, transition: 'opacity 1s ease' }}
-                onContextMenu={(e) => e.preventDefault()}
+                style={{ width: '100%', height: '100%', contain: 'layout paint size', opacity: 0, transition: 'opacity 1s ease', cursor: 'grab' }}
+                onPointerDown={(e) => {
+                    pointerInteracting.current = e.clientX - pointerInteractionMovement.current;
+                    if (canvasRef.current) canvasRef.current.style.cursor = 'grabbing';
+                }}
+                onPointerUp={() => {
+                    pointerInteracting.current = null;
+                    if (canvasRef.current) canvasRef.current.style.cursor = 'grab';
+                }}
+                onPointerOut={() => {
+                    pointerInteracting.current = null;
+                    if (canvasRef.current) canvasRef.current.style.cursor = 'grab';
+                }}
+                onMouseMove={(e) => {
+                    if (pointerInteracting.current !== null) {
+                        const delta = e.clientX - pointerInteracting.current;
+                        pointerInteractionMovement.current = delta * 0.005;
+                    }
+                }}
+                onTouchMove={(e) => {
+                    if (pointerInteracting.current !== null && e.touches[0]) {
+                        const delta = e.touches[0].clientX - pointerInteracting.current;
+                        pointerInteractionMovement.current = delta * 0.005;
+                    }
+                }}
             />
             {/* Fade in effect */}
             <style jsx>{`
