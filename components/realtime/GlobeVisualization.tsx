@@ -1,7 +1,13 @@
 'use client';
 
-import createGlobe from 'cobe';
-import { useEffect, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
+import dynamic from 'next/dynamic';
+
+// Dynamically import Globe to avoid SSR issues
+const Globe = dynamic(() => import('react-globe.gl'), {
+    ssr: false,
+    loading: () => <div style={{ width: '100%', height: '100%', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>Loading Globe...</div>
+});
 
 interface Visitor {
     id: string;
@@ -9,6 +15,7 @@ interface Visitor {
     lng: number;
     country: string;
     city: string;
+    avatarUrl?: string; // Add avatar URL
 }
 
 interface GlobeVisualizationProps {
@@ -16,79 +23,107 @@ interface GlobeVisualizationProps {
 }
 
 export default function GlobeVisualization({ visitors = [] }: GlobeVisualizationProps) {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const pointerInteracting = useRef<number | null>(null);
-    const pointerInteractionMovement = useRef(0);
+    const globeEl = useRef<any>();
+    const [countries, setCountries] = useState({ features: [] });
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        let phi = 0;
+        setMounted(true);
+        // Load country data
+        fetch('https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
+            .then(res => res.json())
+            .then(setCountries);
+    }, []);
 
-        if (!canvasRef.current) return;
-
-        const globe = createGlobe(canvasRef.current, {
-            devicePixelRatio: 2,
-            width: canvasRef.current.clientWidth * 2,
-            height: canvasRef.current.clientHeight * 2,
-            phi: 0,
-            theta: 0,
-            dark: 1,
-            diffuse: 1.2,
-            mapSamples: 16000,
-            mapBrightness: 6,
-            baseColor: [0.3, 0.3, 0.3],
-            markerColor: [0.1, 0.8, 1],
-            glowColor: [0.1, 0.1, 0.2],
-            markers: visitors.map(v => ({ location: [v.lat, v.lng], size: 0.05 })),
-            onRender: (state) => {
-                // Called on every animation frame.
-                if (!pointerInteracting.current) {
-                    phi += 0.003;
-                }
-                state.phi = phi + pointerInteractionMovement.current;
-            },
-        });
-
-        return () => {
-            globe.destroy();
-        };
+    // Generate random avatars for visitors if not present
+    const visitorsWithAvatars = useMemo(() => {
+        return visitors.map(v => ({
+            ...v,
+            avatarUrl: v.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${v.id}&backgroundColor=b6e3f4`
+        }));
     }, [visitors]);
 
+    useEffect(() => {
+        if (globeEl.current) {
+            // Auto-rotate
+            globeEl.current.controls().autoRotate = true;
+            globeEl.current.controls().autoRotateSpeed = 0.5;
+
+            // Set initial point of view if needed, but auto-rotate handles it
+        }
+    }, [mounted]);
+
+    if (!mounted) return null;
+
     return (
-        <div style={{ width: '100%', height: '100%', position: 'relative', background: '#000' }}>
-            <canvas
-                ref={canvasRef}
-                style={{ width: '100%', height: '100%', contain: 'layout paint size', opacity: 0, transition: 'opacity 1s ease', cursor: 'grab' }}
-                onPointerDown={(e) => {
-                    pointerInteracting.current = e.clientX - pointerInteractionMovement.current;
-                    if (canvasRef.current) canvasRef.current.style.cursor = 'grabbing';
-                }}
-                onPointerUp={() => {
-                    pointerInteracting.current = null;
-                    if (canvasRef.current) canvasRef.current.style.cursor = 'grab';
-                }}
-                onPointerOut={() => {
-                    pointerInteracting.current = null;
-                    if (canvasRef.current) canvasRef.current.style.cursor = 'grab';
-                }}
-                onMouseMove={(e) => {
-                    if (pointerInteracting.current !== null) {
-                        const delta = e.clientX - pointerInteracting.current;
-                        pointerInteractionMovement.current = delta * 0.005;
+        <div style={{ width: '100%', height: '100%', background: '#000' }}>
+            <Globe
+                ref={globeEl}
+                globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
+                bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
+                backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
+
+                // Country Borders (Polygons)
+                polygonsData={countries.features}
+                polygonCapColor={() => 'rgba(20, 20, 20, 0.7)'} // Dark fill
+                polygonSideColor={() => 'rgba(0, 0, 0, 0)'}
+                polygonStrokeColor={() => '#333'} // Visible borders
+                polygonAltitude={0.01}
+
+                // HTML Elements (Avatars)
+                htmlElementsData={visitorsWithAvatars}
+                htmlLat={(d: any) => d.lat}
+                htmlLng={(d: any) => d.lng}
+                htmlElement={(d: any) => {
+                    const el = document.createElement('div');
+                    el.innerHTML = `
+                        <div style="position: relative; transform: translate(-50%, -50%); cursor: pointer;">
+                            <div style="
+                                width: 32px; 
+                                height: 32px; 
+                                border-radius: 50%; 
+                                overflow: hidden; 
+                                border: 2px solid #fff; 
+                                box-shadow: 0 0 10px rgba(0,0,0,0.5);
+                                background: #fff;
+                                transition: transform 0.2s;
+                            ">
+                                <img src="${d.avatarUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                            </div>
+                            <div style="
+                                position: absolute; 
+                                bottom: -20px; 
+                                left: 50%; 
+                                transform: translateX(-50%); 
+                                background: rgba(0,0,0,0.8); 
+                                color: #fff; 
+                                padding: 2px 6px; 
+                                border-radius: 4px; 
+                                font-size: 10px; 
+                                white-space: nowrap;
+                                pointer-events: none;
+                            ">
+                                ${d.city}
+                            </div>
+                        </div>
+                    `;
+
+                    // Add hover effect via JS since it's a raw DOM element
+                    const circle = el.querySelector('div > div') as HTMLElement;
+                    if (circle) {
+                        el.addEventListener('mouseenter', () => {
+                            circle.style.transform = 'scale(1.2)';
+                            circle.style.borderColor = '#3b82f6';
+                        });
+                        el.addEventListener('mouseleave', () => {
+                            circle.style.transform = 'scale(1)';
+                            circle.style.borderColor = '#fff';
+                        });
                     }
-                }}
-                onTouchMove={(e) => {
-                    if (pointerInteracting.current !== null && e.touches[0]) {
-                        const delta = e.touches[0].clientX - pointerInteracting.current;
-                        pointerInteractionMovement.current = delta * 0.005;
-                    }
+
+                    return el;
                 }}
             />
-            {/* Fade in effect */}
-            <style jsx>{`
-                canvas {
-                    opacity: 1 !important;
-                }
-            `}</style>
         </div>
     );
 }
