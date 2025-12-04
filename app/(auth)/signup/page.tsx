@@ -1,29 +1,18 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import styles from '../login/login.module.css';
 import { Loader2 } from 'lucide-react';
 
 function SignupForm() {
-    const searchParams = useSearchParams();
-    const prefillEmail = searchParams.get('email') || '';
-    const plan = searchParams.get('plan');
-    const paymentId = searchParams.get('payment_id');
-
-    const [email, setEmail] = useState(prefillEmail);
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
-
-    useEffect(() => {
-        if (prefillEmail) {
-            setEmail(prefillEmail);
-        }
-    }, [prefillEmail]);
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -31,6 +20,8 @@ function SignupForm() {
         setError('');
 
         const supabase = createClient();
+
+        // Sign up the user
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email,
             password,
@@ -47,25 +38,39 @@ function SignupForm() {
             return;
         }
 
-        // If user has a payment_id (came from successful payment), create subscription
-        if (paymentId && plan && authData.user) {
-            const { error: subError } = await supabase.from('subscriptions').insert({
-                user_id: authData.user.id,
-                plan_type: plan,
-                status: 'active',
-                payment_id: paymentId,
-            });
-
-            if (subError) {
-                console.error('Failed to create subscription:', subError);
-            }
+        if (!authData.user) {
+            setError('Signup failed. Please try again.');
+            setLoading(false);
+            return;
         }
 
-        // Redirect to onboarding or checkout based on payment status
-        if (paymentId && plan) {
-            router.push('/onboarding');
+        // Check for pending subscription from webhook (if they paid before creating account)
+        const { data: pendingSubscription } = await supabase
+            .from('pending_subscriptions')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+        if (pendingSubscription) {
+            // Create subscription for this user from pending subscription
+            await supabase.from('subscriptions').insert({
+                user_id: authData.user.id,
+                plan_type: pendingSubscription.plan_type,
+                status: 'active',
+                payment_id: pendingSubscription.payment_id,
+            });
+
+            // Delete the pending subscription
+            await supabase
+                .from('pending_subscriptions')
+                .delete()
+                .eq('email', email);
+
+            // Redirect to dashboard (they already paid)
+            router.push('/dashboard');
         } else {
-            router.push('/pricing');
+            // No payment yet - redirect to checkout
+            router.push('/checkout');
         }
     };
 
@@ -77,13 +82,7 @@ function SignupForm() {
                         <img src="/logo.png" alt="Fast Data Logo" style={{ width: '32px', height: '32px', borderRadius: '6px' }} />
                         <h1 className={styles.logo}>Fast Data</h1>
                     </div>
-                    {paymentId && plan ? (
-                        <p className={styles.subtitle} style={{ color: '#22c55e' }}>
-                            ✓ Payment received! Create your account to get started.
-                        </p>
-                    ) : (
-                        <p className={styles.subtitle}>Create your account to get started</p>
-                    )}
+                    <p className={styles.subtitle}>Create your account to get started</p>
                 </div>
 
                 <form onSubmit={handleSignup} className={styles.form}>
@@ -115,14 +114,7 @@ function SignupForm() {
                             placeholder="you@example.com"
                             required
                             autoComplete="email"
-                            disabled={!!prefillEmail}
-                            style={prefillEmail ? { backgroundColor: 'rgba(255,255,255,0.05)', cursor: 'not-allowed' } : {}}
                         />
-                        {prefillEmail && (
-                            <small style={{ color: '#6b7280', marginTop: '0.25rem', display: 'block' }}>
-                                Use the email you paid with
-                            </small>
-                        )}
                     </div>
 
                     <div className={styles.field}>
@@ -146,11 +138,6 @@ function SignupForm() {
 
                 <div className={styles.footer}>
                     <p>Already have an account? <a href="/login" className={styles.link}>Sign in</a></p>
-                    {!paymentId && (
-                        <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                            Need to purchase first? <a href="/pricing" className={styles.link}>View pricing</a>
-                        </p>
-                    )}
                 </div>
             </div>
         </div>

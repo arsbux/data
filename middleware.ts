@@ -33,24 +33,56 @@ export async function middleware(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser();
 
-    // Protect dashboard routes (requires auth + active subscription)
-    if (request.nextUrl.pathname.startsWith('/dashboard')) {
+    const pathname = request.nextUrl.pathname;
+
+    // Protect checkout - user must be logged in to pay
+    if (pathname === '/checkout' || pathname.startsWith('/api/checkout')) {
         if (!user) {
             return NextResponse.redirect(new URL('/login', request.url));
         }
     }
 
-    // Protect onboarding (requires auth)
-    if (request.nextUrl.pathname.startsWith('/onboarding')) {
+    // Protect dashboard - requires auth + active subscription
+    if (pathname.startsWith('/dashboard')) {
+        if (!user) {
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
+
+        // Check if user has active subscription
+        const { data: subscription } = await supabase
+            .from('subscriptions')
+            .select('status')
+            .eq('user_id', user.id)
+            .single();
+
+        if (!subscription || subscription.status !== 'active') {
+            return NextResponse.redirect(new URL('/checkout', request.url));
+        }
+    }
+
+    // Protect onboarding - requires auth
+    if (pathname.startsWith('/onboarding')) {
         if (!user) {
             return NextResponse.redirect(new URL('/login', request.url));
         }
     }
 
-    // Redirect authenticated users from login/signup to dashboard
-    if (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') {
+    // Redirect authenticated users from login/signup
+    if (pathname === '/login' || pathname === '/signup') {
         if (user) {
-            return NextResponse.redirect(new URL('/dashboard', request.url));
+            // Check subscription status
+            const { data: subscription } = await supabase
+                .from('subscriptions')
+                .select('status')
+                .eq('user_id', user.id)
+                .single();
+
+            if (subscription?.status === 'active') {
+                return NextResponse.redirect(new URL('/dashboard', request.url));
+            } else {
+                // User authenticated but no subscription - send to checkout
+                return NextResponse.redirect(new URL('/checkout', request.url));
+            }
         }
     }
 
@@ -59,15 +91,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - logo.png (logo file)
-         * - api (API routes)
-         * Feel free to modify this pattern to include more paths.
-         */
-        '/((?!_next/static|_next/image|favicon.ico|logo.png|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!_next/static|_next/image|favicon.ico|logo.png|api/webhooks|api/ingest|trackify.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 };

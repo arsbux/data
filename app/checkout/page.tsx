@@ -1,134 +1,150 @@
 'use client';
 
-import { Suspense } from 'react';
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { Check, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
-function CheckoutContent() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'lifetime' | null>(
-        (searchParams.get('plan') as 'monthly' | 'lifetime') || null
-    );
-
-    const handleCheckout = async (plan: 'monthly' | 'lifetime') => {
-        setLoading(true);
-        setError('');
-        try {
-            const res = await fetch('/api/checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ plan }),
-            });
-            const data = await res.json();
-
-            if (data.url) {
-                window.location.href = data.url;
-            } else {
-                throw new Error(data.error || 'Failed to create checkout session');
-            }
-        } catch (err: any) {
-            setError(err.message);
-            setLoading(false);
-        }
-    };
-
+export default function CheckoutPage() {
     return (
-        <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-            <div className="max-w-4xl w-full">
-                <div className="text-center mb-12">
-                    <h1 className="text-3xl font-bold mb-4">Select a Plan</h1>
-                    <p className="text-gray-400">Choose a subscription to access Fast Data</p>
+        <div style={{
+            minHeight: '100vh',
+            backgroundColor: '#000',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '2rem',
+            fontFamily: 'system-ui, -apple-system, sans-serif'
+        }}>
+            <div style={{ maxWidth: '900px', width: '100%' }}>
+                <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                    <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', textDecoration: 'none', color: '#9ca3af' }}>
+                        <img src="/logo.png" alt="Fast Data" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
+                        <span style={{ fontWeight: 700, fontSize: '1.25rem', color: '#fff' }}>Fast Data</span>
+                    </Link>
+                    <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>Select a Plan</h1>
+                    <p style={{ color: '#9ca3af' }}>Choose a subscription to access Fast Data</p>
                 </div>
 
-                {error && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-lg mb-8 text-center">
-                        {error}
-                    </div>
-                )}
-
-                <div className="grid md:grid-cols-2 gap-8">
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                    gap: '2rem',
+                    alignItems: 'start'
+                }}>
                     {/* Monthly Plan */}
-                    <div
-                        className={`p-8 rounded-2xl border transition-all cursor-pointer ${selectedPlan === 'monthly'
-                                ? 'bg-white/10 border-blue-500 ring-2 ring-blue-500/20'
-                                : 'bg-white/5 border-white/10 hover:border-white/20'
-                            }`}
-                        onClick={() => setSelectedPlan('monthly')}
-                    >
-                        <h3 className="text-xl font-semibold mb-2">Monthly</h3>
-                        <div className="flex items-baseline gap-1 mb-6">
-                            <span className="text-4xl font-bold">$9</span>
-                            <span className="text-gray-400">/month</span>
+                    <div style={{
+                        padding: '2rem',
+                        borderRadius: '24px',
+                        backgroundColor: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                    }}>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>Monthly</h3>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem', marginBottom: '1.5rem' }}>
+                            <span style={{ fontSize: '2.5rem', fontWeight: 700 }}>$9</span>
+                            <span style={{ color: '#9ca3af' }}>/month</span>
                         </div>
-                        <ul className="space-y-3 mb-8 text-gray-300 text-sm">
-                            <li className="flex gap-2"><Check className="w-4 h-4 text-blue-400" /> Unlimited websites</li>
-                            <li className="flex gap-2"><Check className="w-4 h-4 text-blue-400" /> 100k pageviews/mo</li>
-                            <li className="flex gap-2"><Check className="w-4 h-4 text-blue-400" /> Cancel anytime</li>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <PricingFeature text="Unlimited websites" />
+                            <PricingFeature text="100k pageviews/mo" />
+                            <PricingFeature text="Real-time analytics" />
+                            <PricingFeature text="Cancel anytime" />
                         </ul>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleCheckout('monthly');
+                        <a
+                            href="/api/checkout?plan=monthly"
+                            style={{
+                                display: 'block',
+                                width: '100%',
+                                padding: '0.875rem',
+                                borderRadius: '12px',
+                                backgroundColor: 'rgba(255,255,255,0.1)',
+                                color: '#fff',
+                                fontWeight: 600,
+                                textDecoration: 'none',
+                                textAlign: 'center',
+                                boxSizing: 'border-box'
                             }}
-                            disabled={loading}
-                            className="w-full py-3 rounded-lg bg-white text-black font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            {loading && selectedPlan === 'monthly' && <Loader2 className="w-4 h-4 animate-spin" />}
-                            {loading && selectedPlan === 'monthly' ? 'Processing...' : 'Subscribe Monthly'}
-                        </button>
+                            Subscribe Monthly
+                        </a>
                     </div>
 
                     {/* Lifetime Plan */}
-                    <div
-                        className={`p-8 rounded-2xl border transition-all cursor-pointer relative overflow-hidden ${selectedPlan === 'lifetime'
-                                ? 'bg-blue-900/20 border-blue-500 ring-2 ring-blue-500/20'
-                                : 'bg-white/5 border-white/10 hover:border-blue-500/30'
-                            }`}
-                        onClick={() => setSelectedPlan('lifetime')}
-                    >
-                        <div className="absolute top-0 right-0 bg-blue-600 text-xs font-bold px-3 py-1 rounded-bl-xl">
+                    <div style={{
+                        padding: '2rem',
+                        borderRadius: '24px',
+                        background: 'linear-gradient(to bottom, rgba(37,99,235,0.2), rgba(30,58,138,0.1))',
+                        border: '1px solid rgba(59,130,246,0.3)',
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}>
+                        <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            right: 0,
+                            backgroundColor: '#2563eb',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            padding: '0.25rem 0.75rem',
+                            borderBottomLeftRadius: '12px'
+                        }}>
                             BEST VALUE
                         </div>
-                        <h3 className="text-xl font-semibold mb-2 text-blue-400">Lifetime Deal</h3>
-                        <div className="flex items-baseline gap-1 mb-6">
-                            <span className="text-4xl font-bold">$39</span>
-                            <span className="text-gray-400">/one-time</span>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem', color: '#60a5fa' }}>Lifetime Deal</h3>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem', marginBottom: '1.5rem' }}>
+                            <span style={{ fontSize: '2.5rem', fontWeight: 700 }}>$39</span>
+                            <span style={{ color: '#9ca3af' }}>/one-time</span>
                         </div>
-                        <ul className="space-y-3 mb-8 text-gray-300 text-sm">
-                            <li className="flex gap-2"><Check className="w-4 h-4 text-blue-400" /> Unlimited everything</li>
-                            <li className="flex gap-2"><Check className="w-4 h-4 text-blue-400" /> Lifetime access</li>
-                            <li className="flex gap-2"><Check className="w-4 h-4 text-blue-400" /> One-time payment</li>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <PricingFeature text="Unlimited websites" />
+                            <PricingFeature text="Unlimited pageviews" />
+                            <PricingFeature text="Lifetime access" />
+                            <PricingFeature text="Future updates included" />
                         </ul>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleCheckout('lifetime');
+                        <a
+                            href="/api/checkout?plan=lifetime"
+                            style={{
+                                display: 'block',
+                                width: '100%',
+                                padding: '0.875rem',
+                                borderRadius: '12px',
+                                backgroundColor: '#2563eb',
+                                color: '#fff',
+                                fontWeight: 600,
+                                textDecoration: 'none',
+                                textAlign: 'center',
+                                boxShadow: '0 4px 14px rgba(37,99,235,0.4)',
+                                boxSizing: 'border-box'
                             }}
-                            disabled={loading}
-                            className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            {loading && selectedPlan === 'lifetime' && <Loader2 className="w-4 h-4 animate-spin" />}
-                            {loading && selectedPlan === 'lifetime' ? 'Processing...' : 'Get Lifetime Access'}
-                        </button>
+                            Get Lifetime Access
+                        </a>
                     </div>
                 </div>
+
+                <p style={{ marginTop: '2rem', textAlign: 'center', color: '#6b7280', fontSize: '0.875rem' }}>
+                    Secure payment powered by Dodo Payments. 30-day money-back guarantee.
+                </p>
             </div>
         </div>
     );
 }
 
-export default function CheckoutPage() {
+function PricingFeature({ text }: { text: string }) {
     return (
-        <Suspense fallback={
-            <div className="min-h-screen bg-black text-white flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin" />
+        <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#d1d5db' }}>
+            <div style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(59,130,246,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+            }}>
+                <Check size={12} color="#60a5fa" />
             </div>
-        }>
-            <CheckoutContent />
-        </Suspense>
+            <span>{text}</span>
+        </li>
     );
 }
