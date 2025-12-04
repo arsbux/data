@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import GlobeVisualization from '@/components/realtime/GlobeVisualization';
 import { createClient } from '@/lib/supabase/client';
-import { Maximize2, Minimize2, Share2, Music, User } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 interface Visitor {
     id: string;
@@ -17,16 +17,50 @@ interface Visitor {
     referrer: string;
 }
 
+interface Site {
+    id: string;
+    site_id: string;
+    name: string;
+    domain: string;
+}
+
 export default function RealtimePage() {
     const [visitors, setVisitors] = useState<Visitor[]>([]);
     const [loading, setLoading] = useState(true);
     const [autoRotate, setAutoRotate] = useState(true);
+    const [sites, setSites] = useState<Site[]>([]);
+    const [selectedSite, setSelectedSite] = useState<Site | null>(null);
+    const [showSiteDropdown, setShowSiteDropdown] = useState(false);
+
+    // Fetch user's sites
+    useEffect(() => {
+        const fetchSites = async () => {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (user) {
+                const { data } = await supabase
+                    .from('sites')
+                    .select('*')
+                    .eq('user_id', user.id);
+
+                if (data && data.length > 0) {
+                    setSites(data);
+                    setSelectedSite(data[0]); // Select first site by default
+                }
+            }
+        };
+        fetchSites();
+    }, []);
 
     const fetchVisitors = async () => {
+        if (!selectedSite) return;
+
         const supabase = createClient();
         const { data, error } = await supabase
             .from('active_visitors')
             .select('*')
+            .eq('site_id', selectedSite.site_id)
             .gt('last_seen', new Date(Date.now() - 5 * 60 * 1000).toISOString()); // Last 5 mins
 
         if (data) {
@@ -46,6 +80,8 @@ export default function RealtimePage() {
     };
 
     useEffect(() => {
+        if (!selectedSite) return;
+
         const supabase = createClient();
 
         fetchVisitors();
@@ -61,7 +97,7 @@ export default function RealtimePage() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []);
+    }, [selectedSite]);
 
     // Group stats
     const referrers = visitors.reduce((acc, v) => {
@@ -153,10 +189,72 @@ export default function RealtimePage() {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                     <span style={{ width: '8px', height: '8px', background: '#3b82f6', borderRadius: '50%', boxShadow: '0 0 8px #3b82f6' }}></span>
                     <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>{visitors.length} visitors on</span>
-                    <span style={{ fontWeight: 600, color: '#ff4f00' }}>producthuntr.com</span>
+
+                    {/* Site Selector */}
+                    <div style={{ position: 'relative' }}>
+                        <button
+                            onClick={() => setShowSiteDropdown(!showSiteDropdown)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: '#ff4f00',
+                                fontWeight: 600,
+                                fontSize: '1.1rem',
+                                padding: 0
+                            }}
+                        >
+                            {selectedSite?.domain || 'Select a site'}
+                            {sites.length > 1 && <ChevronDown size={16} />}
+                        </button>
+
+                        {/* Dropdown */}
+                        {showSiteDropdown && sites.length > 1 && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '100%',
+                                left: 0,
+                                marginTop: '0.5rem',
+                                background: 'rgba(30, 30, 30, 0.95)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                minWidth: '200px',
+                                zIndex: 100
+                            }}>
+                                {sites.map((site) => (
+                                    <button
+                                        key={site.id}
+                                        onClick={() => {
+                                            setSelectedSite(site);
+                                            setShowSiteDropdown(false);
+                                        }}
+                                        style={{
+                                            display: 'block',
+                                            width: '100%',
+                                            padding: '0.75rem 1rem',
+                                            background: selectedSite?.id === site.id ? 'rgba(255,79,0,0.1)' : 'transparent',
+                                            border: 'none',
+                                            borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                            color: selectedSite?.id === site.id ? '#ff4f00' : '#fff',
+                                            textAlign: 'left',
+                                            cursor: 'pointer',
+                                            fontSize: '0.875rem'
+                                        }}
+                                    >
+                                        <div style={{ fontWeight: 500 }}>{site.domain}</div>
+                                        <div style={{ fontSize: '0.75rem', color: '#888' }}>{site.name}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.8rem', color: '#aaa' }}>
