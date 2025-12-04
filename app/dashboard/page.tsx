@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import styles from './page.module.css';
-import VisitorChart from '@/components/dashboard/VisitorChart';
+import AnalyticsChart from '@/components/dashboard/AnalyticsChart';
 
 interface DashboardStats {
   visitors: number;
@@ -35,7 +35,7 @@ export default function DashboardPage() {
   const [pages, setPages] = useState<ListItem[]>([]);
   const [locations, setLocations] = useState<ListItem[]>([]);
   const [devices, setDevices] = useState<ListItem[]>([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState('7d');
 
@@ -44,11 +44,11 @@ export default function DashboardPage() {
       setLoading(true);
       try {
         const [
-          overviewRes, 
-          timelineRes, 
-          referrersRes, 
-          pagesRes, 
-          locationsRes, 
+          overviewRes,
+          timelineRes,
+          referrersRes,
+          pagesRes,
+          locationsRes,
           devicesRes
         ] = await Promise.all([
           fetch(`/api/analytics/overview?range=${range}`),
@@ -120,57 +120,17 @@ export default function DashboardPage() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1>Dashboard</h1>
-        <div className={styles.headerActions}>
-          <select 
-            className={styles.dateSelect} 
-            value={range} 
-            onChange={(e) => setRange(e.target.value)}
-          >
-            <option value="24h">Last 24 hours</option>
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
-          </select>
-        </div>
-      </div>
 
-      <div className={styles.metricsGrid}>
-        <div className="glass-card">
-          <div className={styles.metricLabel}>Visitors</div>
-          <div className={styles.metricValue}>{stats.visitors?.toLocaleString() || 0}</div>
-        </div>
-
-        <div className="glass-card">
-          <div className={styles.metricLabel}>Page Views</div>
-          <div className={styles.metricValue}>{stats.pageViews?.toLocaleString() || 0}</div>
-        </div>
-
-        <div className="glass-card">
-          <div className={styles.metricLabel}>Bounce Rate</div>
-          <div className={styles.metricValue}>{stats.bounceRate || 0}%</div>
-        </div>
-
-        <div className="glass-card">
-          <div className={styles.metricLabel}>Avg. Session Time</div>
-          <div className={styles.metricValue}>{formatDuration(stats.avgSessionTime || 0)}</div>
-        </div>
-
-        <div className="glass-card">
-          <div className={styles.metricLabel}>Visitors Now</div>
-          <div className={styles.metricValue}>
-            <span className={styles.liveIndicator}>●</span>
-            {visitorsNow}
-          </div>
-        </div>
       </div>
 
       <div className={styles.chartSection}>
-        <div className="glass-card" style={{ height: '400px' }}>
-          <h2 className={styles.sectionTitle}>Visitor Timeline</h2>
-          <div style={{ width: '100%', height: '300px' }}>
-            <VisitorChart data={timeline} />
-          </div>
-        </div>
+        <AnalyticsChart
+          stats={stats}
+          visitorsNow={visitorsNow}
+          data={timeline}
+          range={range}
+          onRangeChange={setRange}
+        />
       </div>
 
       <div className={styles.dataGrid}>
@@ -236,6 +196,6 @@ function getFlagEmoji(countryCode: string) {
   const codePoints = countryCode
     .toUpperCase()
     .split('')
-    .map(char =>  127397 + char.charCodeAt(0));
+    .map(char => 127397 + char.charCodeAt(0));
   return String.fromCodePoint(...codePoints);
 }
