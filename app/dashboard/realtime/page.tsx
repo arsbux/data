@@ -20,33 +20,33 @@ interface Visitor {
 export default function RealtimePage() {
     const [visitors, setVisitors] = useState<Visitor[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [autoRotate, setAutoRotate] = useState(true);
+
+    const fetchVisitors = async () => {
+        const supabase = createClient();
+        const { data, error } = await supabase
+            .from('active_visitors')
+            .select('*')
+            .gt('last_seen', new Date(Date.now() - 5 * 60 * 1000).toISOString()); // Last 5 mins
+
+        if (data) {
+            setVisitors(data.map(v => ({
+                id: v.visitor_id,
+                lat: v.latitude || 0,
+                lng: v.longitude || 0,
+                country: v.country_code || 'Unknown',
+                city: v.city || 'Unknown',
+                page: v.current_page,
+                lastSeen: v.last_seen,
+                device: v.device_type || 'Desktop',
+                referrer: v.referrer_domain || 'Direct'
+            })));
+        }
+        setLoading(false);
+    };
 
     useEffect(() => {
         const supabase = createClient();
-
-        // Initial fetch
-        const fetchVisitors = async () => {
-            const { data, error } = await supabase
-                .from('active_visitors')
-                .select('*')
-                .gt('last_seen', new Date(Date.now() - 5 * 60 * 1000).toISOString()); // Last 5 mins
-
-            if (data) {
-                setVisitors(data.map(v => ({
-                    id: v.visitor_id,
-                    lat: v.latitude || 0,
-                    lng: v.longitude || 0,
-                    country: v.country_code || 'Unknown',
-                    city: v.city || 'Unknown',
-                    page: v.current_page,
-                    lastSeen: v.last_seen,
-                    device: v.device_type || 'Desktop',
-                    referrer: v.referrer_domain || 'Direct'
-                })));
-            }
-            setLoading(false);
-        };
 
         fetchVisitors();
 
@@ -104,7 +104,7 @@ export default function RealtimePage() {
 
             {/* Globe */}
             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
-                <GlobeVisualization visitors={visitors} />
+                <GlobeVisualization visitors={visitors} autoRotate={autoRotate} />
             </div>
 
             {/* Top Left Stats Card */}
@@ -128,10 +128,28 @@ export default function RealtimePage() {
                         <span style={{ color: '#888' }}>REAL-TIME</span>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <User size={14} color="#888" />
-                        <Share2 size={14} color="#888" />
-                        <Music size={14} color="#888" />
-                        <Maximize2 size={14} color="#888" />
+                        <button
+                            onClick={() => setAutoRotate(!autoRotate)}
+                            title={autoRotate ? "Pause Rotation" : "Start Rotation"}
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: autoRotate ? '#3b82f6' : '#666' }}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+                                <path d="M21 3v5h-5" />
+                            </svg>
+                        </button>
+                        <button
+                            onClick={() => fetchVisitors()}
+                            title="Refresh Data"
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#666' }}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                                <path d="M21 3v5h-5" />
+                                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                                <path d="M8 16H3v5" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
 

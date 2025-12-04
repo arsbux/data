@@ -20,6 +20,7 @@ interface Visitor {
 
 interface GlobeVisualizationProps {
     visitors: Visitor[];
+    autoRotate?: boolean;
 }
 
 import polylabel from 'polylabel';
@@ -57,7 +58,7 @@ const getCentroid = (feature: any) => {
     };
 };
 
-export default function GlobeVisualization({ visitors = [] }: GlobeVisualizationProps) {
+export default function GlobeVisualization({ visitors = [], autoRotate = true }: GlobeVisualizationProps) {
     const globeEl = useRef<any>();
     const [countries, setCountries] = useState({ features: [] });
     const [mounted, setMounted] = useState(false);
@@ -82,13 +83,13 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
         if (globeEl.current) {
             // Auto-rotate
             const controls = globeEl.current.controls();
-            controls.autoRotate = true;
+            controls.autoRotate = autoRotate;
             controls.autoRotateSpeed = 0.5;
             controls.enableZoom = true;
             controls.minDistance = 120; // Prevent zooming inside the globe
             controls.maxDistance = 400;
         }
-    }, [mounted]);
+    }, [mounted, autoRotate]);
 
     if (!mounted) return null;
 
