@@ -113,7 +113,7 @@ export default function GlobeVisualization({ visitors = [] }: GlobeVisualization
                 labelDotRadius={0.3}
                 labelColor={() => 'rgba(200, 200, 200, 0.75)'}
                 labelResolution={3}
-                labelAltitude={0.005}
+                labelAltitude={0.02}
                 labelIncludeDot={false}
 
                 // HTML Elements (Avatars)
