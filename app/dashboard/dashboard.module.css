@@ -65,12 +65,37 @@
 }
 
 @media (max-width: 768px) {
+    .layout {
+        flex-direction: column;
+    }
+
     .sidebar {
         width: 100%;
         height: auto;
         position: static;
         border-right: none;
         border-bottom: 1px solid var(--border-primary);
+        padding: 1rem 0;
+    }
+
+    .sidebarHeader {
+        padding: 0 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0 0.75rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .navItem {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        white-space: nowrap;
     }
 
     .main {
