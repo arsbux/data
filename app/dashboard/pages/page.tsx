@@ -8,12 +8,13 @@ export default function PagesPage() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [range, setRange] = useState('7d');
+    const [activeTab, setActiveTab] = useState('page');
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const res = await fetch(`/api/analytics/pages?range=${range}`);
+                const res = await fetch(`/api/analytics/pages?range=${range}&type=${activeTab}`);
                 const json = await res.json();
                 setData(json);
             } catch (error) {
@@ -23,10 +24,10 @@ export default function PagesPage() {
             }
         };
         fetchData();
-    }, [range]);
+    }, [range, activeTab]);
 
     const columns = [
-        { key: 'name', label: 'Page Path' },
+        { key: 'name', label: activeTab === 'hostname' ? 'Hostname' : 'Page Path' },
         { key: 'value', label: 'Visitors' },
     ];
 
@@ -43,6 +44,24 @@ export default function PagesPage() {
                     <option value="30d">Last 30 days</option>
                 </select>
             </div>
+
+            <div className={styles.tabContainer}>
+                {[
+                    { id: 'hostname', label: 'Hostname' },
+                    { id: 'page', label: 'Page' },
+                    { id: 'entry_page', label: 'Entry page' },
+                    { id: 'exit_page', label: 'Exit link' }
+                ].map((tab) => (
+                    <button
+                        key={tab.id}
+                        className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ''}`}
+                        onClick={() => setActiveTab(tab.id)}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
             <DataTable columns={columns} data={data} loading={loading} />
         </div>
     );

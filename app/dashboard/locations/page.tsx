@@ -8,12 +8,13 @@ export default function LocationsPage() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [range, setRange] = useState('7d');
+    const [activeTab, setActiveTab] = useState('country');
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const res = await fetch(`/api/analytics/locations?range=${range}`);
+                const res = await fetch(`/api/analytics/locations?range=${range}&type=${activeTab}`);
                 const json = await res.json();
                 setData(json);
             } catch (error) {
@@ -23,12 +24,12 @@ export default function LocationsPage() {
             }
         };
         fetchData();
-    }, [range]);
+    }, [range, activeTab]);
 
     const columns = [
         {
             key: 'name',
-            label: 'Country',
+            label: activeTab === 'city' ? 'City' : activeTab === 'region' ? 'Region' : 'Country',
             render: (value: string, row: any) => (
                 <span>{row.code ? getFlagEmoji(row.code) + ' ' : ''}{value}</span>
             )
@@ -49,6 +50,20 @@ export default function LocationsPage() {
                     <option value="30d">Last 30 days</option>
                 </select>
             </div>
+
+            <div className={styles.tabContainer}>
+                {['country', 'region', 'city'].map((tab) => (
+                    <button
+                        key={tab}
+                        className={`${styles.tabButton} ${activeTab === tab ? styles.tabButtonActive : ''}`}
+                        onClick={() => setActiveTab(tab)}
+                        style={{ textTransform: 'capitalize' }}
+                    >
+                        {tab}
+                    </button>
+                ))}
+            </div>
+
             <DataTable columns={columns} data={data} loading={loading} />
         </div>
     );

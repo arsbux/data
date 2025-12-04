@@ -8,14 +8,21 @@ export default function DevicesPage() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [range, setRange] = useState('7d');
+    const [activeTab, setActiveTab] = useState('device');
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const res = await fetch(`/api/analytics/devices?range=${range}`);
+                const res = await fetch(`/api/analytics/devices?range=${range}&type=${activeTab}`);
                 const json = await res.json();
-                setData(json);
+                // Map count to value for bar visualization
+                const mappedData = json.map((item: any) => ({
+                    ...item,
+                    value: item.count, // Use count for bar width and display
+                    percentage: item.value // Keep percentage if needed
+                }));
+                setData(mappedData);
             } catch (error) {
                 console.error(error);
             } finally {
@@ -23,15 +30,15 @@ export default function DevicesPage() {
             }
         };
         fetchData();
-    }, [range]);
+    }, [range, activeTab]);
 
     const columns = [
         {
             key: 'name',
-            label: 'Device Type',
+            label: activeTab === 'os' ? 'OS' : activeTab === 'browser' ? 'Browser' : 'Device',
             render: (value: string) => <span style={{ textTransform: 'capitalize' }}>{value}</span>
         },
-        { key: 'value', label: 'Percentage (%)' },
+        { key: 'value', label: 'Visitors' },
     ];
 
     return (
@@ -47,6 +54,20 @@ export default function DevicesPage() {
                     <option value="30d">Last 30 days</option>
                 </select>
             </div>
+
+            <div className={styles.tabContainer}>
+                {['device', 'browser', 'os'].map((tab) => (
+                    <button
+                        key={tab}
+                        className={`${styles.tabButton} ${activeTab === tab ? styles.tabButtonActive : ''}`}
+                        onClick={() => setActiveTab(tab)}
+                        style={{ textTransform: 'capitalize' }}
+                    >
+                        {tab}
+                    </button>
+                ))}
+            </div>
+
             <DataTable columns={columns} data={data} loading={loading} />
         </div>
     );

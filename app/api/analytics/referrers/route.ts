@@ -5,6 +5,7 @@ import { subDays } from 'date-fns';
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const range = searchParams.get('range') || '7d';
+  const type = searchParams.get('type') || 'referrer'; // referrer, channel, campaign, keyword
   const siteId = searchParams.get('siteId');
 
   let startDate = subDays(new Date(), 7);
@@ -14,9 +15,14 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
 
   try {
+    let column = 'referrer_domain';
+    if (type === 'channel') column = 'utm_medium'; // or utm_source
+    if (type === 'campaign') column = 'utm_campaign';
+    if (type === 'keyword') column = 'utm_term';
+
     let query = supabase
       .from('page_views')
-      .select('referrer_domain')
+      .select(column)
       .gte('timestamp', startDate.toISOString());
 
     if (siteId) query = query.eq('site_id', siteId);
@@ -26,16 +32,16 @@ export async function GET(request: NextRequest) {
     if (error) throw error;
 
     const referrersMap = new Map<string, number>();
-    
-    data?.forEach(pv => {
-      const domain = pv.referrer_domain || 'Direct / None';
-      referrersMap.set(domain, (referrersMap.get(domain) || 0) + 1);
+
+    data?.forEach((pv: any) => {
+      const name = pv[column] || (type === 'referrer' ? 'Direct / None' : 'None');
+      referrersMap.set(name, (referrersMap.get(name) || 0) + 1);
     });
 
     const result = Array.from(referrersMap.entries())
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 10);
+      .slice(0, 20);
 
     return NextResponse.json(result);
 
